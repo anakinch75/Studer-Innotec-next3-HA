@@ -62,17 +62,16 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _get_client(self) -> AsyncModbusTcpClient:
         """Return a connected Modbus client, creating one if needed."""
         if self._client is None or not self._client.connected:
-            self._client = AsyncModbusTcpClient(
-                self._host, port=self._port, timeout=_CONNECT_TIMEOUT
-            )
             try:
-                async with asyncio.timeout(_CONNECT_TIMEOUT):
-                    await self._client.connect()
+                self._client = AsyncModbusTcpClient(self._host, port=self._port)
+                await asyncio.wait_for(self._client.connect(), timeout=_CONNECT_TIMEOUT)
             except (OSError, TimeoutError, asyncio.TimeoutError) as err:
+                self._client = None
                 raise UpdateFailed(
                     f"Cannot connect to Studer Next3 at {self._host}:{self._port}: {err}"
                 ) from err
             if not self._client.connected:
+                self._client = None
                 raise UpdateFailed(
                     f"Cannot connect to Studer Next3 at {self._host}:{self._port}"
                 )

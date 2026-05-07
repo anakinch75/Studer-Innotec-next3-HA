@@ -31,14 +31,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _test_connection(host: str, port: int) -> str | None:
     """Try to connect to the device. Return an error key or None if OK."""
-    client = AsyncModbusTcpClient(host, port=port, timeout=_CONNECT_TIMEOUT)
+    client = None
     try:
-        async with asyncio.timeout(_CONNECT_TIMEOUT):
-            await client.connect()
+        client = AsyncModbusTcpClient(host, port=port)
+        await asyncio.wait_for(client.connect(), timeout=_CONNECT_TIMEOUT)
         if not client.connected:
             return "cannot_connect"
         # Quick sanity read: battery SOC register on slave 1
-        result = await client.read_holding_registers(address=8426, count=2, slave=1)
+        result = await asyncio.wait_for(
+            client.read_holding_registers(address=8426, count=2, slave=1),
+            timeout=_CONNECT_TIMEOUT,
+        )
         if result.isError():
             return "invalid_response"
         return None
@@ -47,10 +50,11 @@ async def _test_connection(host: str, port: int) -> str | None:
     except (OSError, TimeoutError, asyncio.TimeoutError):
         return "cannot_connect"
     except Exception as err:  # noqa: BLE001
-        _LOGGER.exception("Unexpected error testing connection to %s:%s: %s", host, port, err)
+        _LOGGER.exception("Unexpected error testing connection to %s:%s", host, port)
         return "unknown"
     finally:
-        client.close()
+        if client is not None:
+            client.close()
 
 
 class StuderNext3ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -72,14 +76,19 @@ class StuderNext3ConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
-            error = await _test_connection(host, port)
-            if error:
-                errors["base"] = error
+            try:
+                error = await _test_connection(host, port)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Config flow error for %s:%s", host, port)
+                errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=f"Studer Next3 ({host})",
-                    data=user_input,
-                )
+                if error:
+                    errors["base"] = error
+                else:
+                    return self.async_create_entry(
+                        title=f"Studer Next3 ({host})",
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
