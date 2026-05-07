@@ -1,6 +1,7 @@
 """Config flow for Studer Next3."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -15,6 +16,8 @@ from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+_CONNECT_TIMEOUT = 10  # seconds
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
@@ -28,9 +31,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _test_connection(host: str, port: int) -> str | None:
     """Try to connect to the device. Return an error key or None if OK."""
-    client = AsyncModbusTcpClient(host, port=port)
+    client = AsyncModbusTcpClient(host, port=port, timeout=_CONNECT_TIMEOUT)
     try:
-        await client.connect()
+        async with asyncio.timeout(_CONNECT_TIMEOUT):
+            await client.connect()
         if not client.connected:
             return "cannot_connect"
         # Quick sanity read: battery SOC register on slave 1
@@ -40,7 +44,10 @@ async def _test_connection(host: str, port: int) -> str | None:
         return None
     except ModbusException:
         return "cannot_connect"
-    except Exception:  # noqa: BLE001
+    except (OSError, TimeoutError, asyncio.TimeoutError):
+        return "cannot_connect"
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.exception("Unexpected error testing connection to %s:%s: %s", host, port, err)
         return "unknown"
     finally:
         client.close()
