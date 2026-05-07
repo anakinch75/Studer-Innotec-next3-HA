@@ -6,18 +6,16 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from pymodbus.client import AsyncModbusTcpClient
-from pymodbus.exceptions import ModbusException
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .coordinator import _compat_read_holding_registers
+from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _LOGGER = logging.getLogger(__name__)
 
-_CONNECT_TIMEOUT = 10  # seconds
+_CONNECT_TIMEOUT = 10
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -32,30 +30,23 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _test_connection(host: str, port: int) -> str | None:
     """Try to connect to the device. Return an error key or None if OK."""
-    client = None
+    client = ModbusTcpClient(host, port, timeout=_CONNECT_TIMEOUT)
     try:
-        client = AsyncModbusTcpClient(host, port=port)
-        await asyncio.wait_for(client.connect(), timeout=_CONNECT_TIMEOUT)
-        if not client.connected:
+        ok = await asyncio.wait_for(client.connect(), timeout=_CONNECT_TIMEOUT)
+        if not ok:
             return "cannot_connect"
-        # Quick sanity read: battery SOC register on slave 1
-        result = await asyncio.wait_for(
-            _compat_read_holding_registers(client, 8426, 2, 1),
-            timeout=_CONNECT_TIMEOUT,
-        )
-        if result.isError():
-            return "invalid_response"
+        # Sanity read: battery SOC register on slave 1
+        await client.read_holding_registers(8426, 2, 1)
         return None
-    except ModbusException:
-        return "cannot_connect"
+    except ModbusTcpError:
+        return "invalid_response"
     except (OSError, TimeoutError, asyncio.TimeoutError):
         return "cannot_connect"
-    except Exception as err:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         _LOGGER.exception("Unexpected error testing connection to %s:%s", host, port)
         return "unknown"
     finally:
-        if client is not None:
-            client.close()
+        client.close()
 
 
 class StuderNext3ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -73,7 +64,6 @@ class StuderNext3ConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            # Prevent duplicate entries for the same device
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
