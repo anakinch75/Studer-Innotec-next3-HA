@@ -1,7 +1,7 @@
 {
   "domain": "studer_next3",
   "name": "Studer Next3",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "config_flow": true,
   "documentation": "https://github.com/anakinch75/Studer-Innotec-next3-HA",
   "issue_tracker": "https://github.com/anakinch75/Studer-Innotec-next3-HA/issues",
