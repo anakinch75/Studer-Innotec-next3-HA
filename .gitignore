@@ -1,0 +1,14 @@
+# Claude Code local session files
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
