@@ -7,8 +7,7 @@ import struct
 from datetime import timedelta
 from typing import Any
 
-_CONNECT_TIMEOUT = 10  # seconds
-
+import pymodbus
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
@@ -18,6 +17,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, REGISTER_DEFINITIONS, ModbusRegisterDef
 
 _LOGGER = logging.getLogger(__name__)
+_CONNECT_TIMEOUT = 10  # seconds
+
+_LOGGER.warning("studer_next3: pymodbus version = %s", pymodbus.__version__)
+
+# Cached kwarg name for slave ID ("slave", "unit", or "" = not supported)
+_SLAVE_KWARG: str | None = None  # None = not yet detected
 
 
 def _decode_float32(registers: list[int]) -> float:
@@ -32,27 +37,45 @@ def _decode_float64(registers: list[int]) -> float:
     return struct.unpack(">d", raw)[0]
 
 
-
 async def _compat_read_holding_registers(
     client: AsyncModbusTcpClient, address: int, count: int, slave: int
 ):
-    """Call read_holding_registers with pymodbus 2.x/3.x API compatibility.
+    """Call read_holding_registers with automatic pymodbus version detection.
 
-    Different pymodbus versions use different signatures:
-      - 3.x keyword: slave=
-      - 2.x keyword: unit=
-      - some versions: address only, count/slave via kwargs
-    Try each variant until one works.
+    Tries slave= (3.x), unit= (2.x), then no slave kwarg in order.
+    Caches the first working variant for subsequent calls.
     """
-    for kwargs in (
-        {"count": count, "slave": slave},  # pymodbus 3.x
-        {"count": count, "unit": slave},   # pymodbus 2.x
-        {"count": count},                  # no slave arg
-    ):
+    global _SLAVE_KWARG
+
+    candidates = [
+        ("slave", {"count": count, "slave": slave}),
+        ("unit",  {"count": count, "unit": slave}),
+        ("",      {"count": count}),
+    ]
+
+    if _SLAVE_KWARG is not None:
+        # Use cached variant
+        kwargs = {"count": count}
+        if _SLAVE_KWARG:
+            kwargs[_SLAVE_KWARG] = slave
+        return await client.read_holding_registers(address, **kwargs)
+
+    # Discovery: find which variant works
+    for key, kwargs in candidates:
         try:
-            return await client.read_holding_registers(address, **kwargs)
+            result = await client.read_holding_registers(address, **kwargs)
+            _SLAVE_KWARG = key
+            if key:
+                _LOGGER.warning("studer_next3: slave kwarg = '%s'", key)
+            else:
+                _LOGGER.warning(
+                    "studer_next3: no slave kwarg supported — slave ID cannot be set. "
+                    "Registers on non-default slaves (e.g. slave 7) may return wrong data."
+                )
+            return result
         except TypeError:
             continue
+
     raise ModbusException("Incompatible pymodbus API — no working signature found")
 
 
@@ -96,39 +119,46 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
         return self._client
 
-    async def _read_two_registers(
-        self, client: AsyncModbusTcpClient, address: int, slave: int
+    async def _read_n_registers(
+        self, client: AsyncModbusTcpClient, address: int, count: int, slave: int, key: str
     ) -> list[int] | None:
-        """Read 2 holding registers and return the register list, or None on error."""
+        """Read `count` holding registers. Returns list or None on any error."""
         try:
-            result = await _compat_read_holding_registers(client, address, 2, slave)
+            result = await _compat_read_holding_registers(client, address, count, slave)
         except ModbusException as err:
-            _LOGGER.warning("Modbus error at address %s: %s", address, err)
+            _LOGGER.warning("Modbus error reading %s (addr=%s count=%s): %s", key, address, count, err)
             return None
         if result.isError():
-            _LOGGER.warning("Error response at address %s", address)
+            _LOGGER.warning("Error response for %s (slave=%s addr=%s count=%s): %s", key, slave, address, count, result)
             return None
-        if len(result.registers) < 2:
-            _LOGGER.warning("Short read at address %s: got %d", address, len(result.registers))
+        regs = list(result.registers)
+        if len(regs) < count:
+            _LOGGER.warning("Short read for %s: expected %d, got %d", key, count, len(regs))
             return None
-        return list(result.registers)
+        return regs
 
     async def _read_register(
         self, client: AsyncModbusTcpClient, reg: ModbusRegisterDef
     ) -> float | None:
         """Read a single register definition and return its decoded value."""
-        regs = await self._read_two_registers(client, reg.address, reg.slave)
-        if regs is None:
-            return None
-
         if reg.data_type == "float32":
+            regs = await self._read_n_registers(client, reg.address, 2, reg.slave, reg.key)
+            if regs is None:
+                return None
             return _decode_float32(regs)
 
-        # float64: read the second pair of registers (address + 2)
-        regs2 = await self._read_two_registers(client, reg.address + 2, reg.slave)
-        if regs2 is None:
+        # float64: try single 4-register read first
+        regs = await self._read_n_registers(client, reg.address, 4, reg.slave, reg.key)
+        if regs is not None:
+            return _decode_float64(regs)
+
+        # Fallback: two consecutive 2-register reads
+        _LOGGER.warning("float64 single-read failed for %s — trying split read", reg.key)
+        regs1 = await self._read_n_registers(client, reg.address, 2, reg.slave, reg.key)
+        regs2 = await self._read_n_registers(client, reg.address + 2, 2, reg.slave, reg.key)
+        if regs1 is None or regs2 is None:
             return None
-        return _decode_float64(regs + regs2)
+        return _decode_float64(regs1 + regs2)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Studer Next3 — called by HA on each interval."""
@@ -145,7 +175,6 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                 value = await self._read_register(client, reg)
                 data[reg.key] = value
 
-            # Derived sensor: battery power sign is inverted in the raw register
             raw = data.get("battery_power_raw")
             data["battery_power"] = (-raw) if raw is not None else None
 
