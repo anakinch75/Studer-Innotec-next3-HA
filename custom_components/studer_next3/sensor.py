@@ -49,6 +49,7 @@ class StuderNext3Sensor(CoordinatorEntity[StuderNext3Coordinator], SensorEntity)
         self._reg = reg
         self._attr_unique_id = f"next3_{reg.key}"
         self._attr_name = reg.name
+        self._attr_entity_registry_enabled_default = reg.key != "battery_power_raw"
         self._attr_native_unit_of_measurement = reg.unit
         self._attr_device_class = reg.device_class
         self._attr_state_class = reg.state_class

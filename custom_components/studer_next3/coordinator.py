@@ -10,7 +10,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, REGISTER_DEFINITIONS, ModbusRegisterDef
+from .const import DOMAIN, DataType, REGISTER_DEFINITIONS, ModbusRegisterDef
 from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,8 +52,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return a connected client, reconnecting if needed."""
         if self._client is None or not self._client.connected:
             self._client = ModbusTcpClient(self._host, self._port, timeout=_CONNECT_TIMEOUT)
-            ok = await asyncio.wait_for(self._client.connect(), timeout=_CONNECT_TIMEOUT)
-            if not ok:
+            if not await self._client.connect():
                 self._client = None
                 raise UpdateFailed(
                     f"Cannot connect to Studer Next3 at {self._host}:{self._port}"
@@ -64,7 +63,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, client: ModbusTcpClient, reg: ModbusRegisterDef
     ) -> float | None:
         """Read one register definition. Returns decoded float or None on error."""
-        count = 2 if reg.data_type == "float32" else 4
+        count = 2 if reg.data_type is DataType.FLOAT32 else 4
         try:
             regs = await client.read_holding_registers(reg.address, count, reg.slave)
         except ModbusTcpError as err:
@@ -77,7 +76,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         if len(regs) < count:
             _LOGGER.warning("Short read for %s: expected %d got %d", reg.key, count, len(regs))
             return None
-        if reg.data_type == "float32":
+        if reg.data_type is DataType.FLOAT32:
             return _decode_float32(regs)
         return _decode_float64(regs)
 

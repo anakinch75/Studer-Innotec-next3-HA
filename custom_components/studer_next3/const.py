@@ -1,7 +1,9 @@
 """Constants for Studer Next3 integration."""
 from dataclasses import dataclass
+from enum import Enum
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfPower, UnitOfEnergy
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 
 DOMAIN = "studer_next3"
 DEFAULT_HOST = ""
@@ -9,15 +11,18 @@ DEFAULT_PORT = 502
 DEFAULT_SCAN_INTERVAL = 15
 
 
+class DataType(str, Enum):
+    FLOAT32 = "float32"
+    FLOAT64 = "float64"
+
+
 @dataclass
 class ModbusRegisterDef:
-    """Definition of a Modbus register mapped to a HA sensor."""
-
     key: str
     name: str
     slave: int
     address: int
-    data_type: str  # "float32" or "float64"
+    data_type: DataType
     unit: str
     device_class: str
     state_class: str
@@ -29,7 +34,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="AC-Source Active Power",
         slave=7,
         address=8,
-        data_type="float32",
+        data_type=DataType.FLOAT32,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -39,7 +44,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="AC-Source Consumed Energy",
         slave=7,
         address=24,
-        data_type="float64",
+        data_type=DataType.FLOAT64,
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -49,7 +54,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="AC-Source Produced Energy",
         slave=7,
         address=36,
-        data_type="float64",
+        data_type=DataType.FLOAT64,
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -59,7 +64,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="AC-Loads Active Power",
         slave=1,
         address=3908,
-        data_type="float32",
+        data_type=DataType.FLOAT32,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -69,7 +74,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="AC-Loads Consumed Energy",
         slave=1,
         address=3924,
-        data_type="float64",
+        data_type=DataType.FLOAT64,
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -79,7 +84,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="PV Power",
         slave=1,
         address=7505,
-        data_type="float32",
+        data_type=DataType.FLOAT32,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -89,7 +94,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="PV Energy",
         slave=1,
         address=7519,
-        data_type="float64",
+        data_type=DataType.FLOAT64,
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -99,7 +104,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Battery Power (raw)",
         slave=1,
         address=8400,
-        data_type="float32",
+        data_type=DataType.FLOAT32,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -109,7 +114,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Battery Charging Energy",
         slave=1,
         address=8410,
-        data_type="float64",
+        data_type=DataType.FLOAT64,
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -119,7 +124,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Battery Discharging Energy",
         slave=1,
         address=8422,
-        data_type="float64",
+        data_type=DataType.FLOAT64,
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -129,7 +134,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Battery SOC",
         slave=1,
         address=8426,
-        data_type="float32",
+        data_type=DataType.FLOAT32,
         unit="%",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
