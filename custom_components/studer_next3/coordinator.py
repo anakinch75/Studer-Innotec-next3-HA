@@ -37,6 +37,29 @@ def _register_count(data_type: str) -> int:
     return 2 if data_type == "float32" else 4
 
 
+async def _compat_read_holding_registers(
+    client: AsyncModbusTcpClient, address: int, count: int, slave: int
+):
+    """Call read_holding_registers with pymodbus 2.x/3.x API compatibility.
+
+    Different pymodbus versions use different signatures:
+      - 3.x keyword: slave=
+      - 2.x keyword: unit=
+      - some versions: address only, count/slave via kwargs
+    Try each variant until one works.
+    """
+    for kwargs in (
+        {"count": count, "slave": slave},  # pymodbus 3.x
+        {"count": count, "unit": slave},   # pymodbus 2.x
+        {"count": count},                  # no slave arg
+    ):
+        try:
+            return await client.read_holding_registers(address, **kwargs)
+        except TypeError:
+            continue
+    raise ModbusException("Incompatible pymodbus API — no working signature found")
+
+
 class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator that polls all Modbus registers and exposes the data dict."""
 
@@ -83,8 +106,8 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Read a single register definition and return its decoded value."""
         count = _register_count(reg.data_type)
         try:
-            result = await client.read_holding_registers(
-                reg.address, count, reg.slave
+            result = await _compat_read_holding_registers(
+                client, reg.address, count, reg.slave
             )
         except ModbusException as err:
             _LOGGER.warning("Modbus error reading %s: %s", reg.key, err)
