@@ -44,7 +44,7 @@ class StuderNext3Sensor(CoordinatorEntity[StuderNext3Coordinator], SensorEntity)
         super().__init__(coordinator)
         self._reg = reg
         self._attr_unique_id = f"next3_{reg.key}"
-        self._attr_name = f"Next3 {reg.name}"
+        self._attr_name = reg.name
         self._attr_native_unit_of_measurement = reg.unit
         self._attr_device_class = reg.device_class
         self._attr_state_class = reg.state_class
@@ -81,7 +81,7 @@ class StuderNext3BatteryPowerSensor(
         from homeassistant.const import UnitOfPower
 
         self._attr_unique_id = "next3_battery_power"
-        self._attr_name = "Next3 Battery Power"
+        self._attr_name = "Battery Power"
         self._attr_native_unit_of_measurement = UnitOfPower.WATT
         self._attr_device_class = SensorDeviceClass.POWER
         self._attr_state_class = SensorStateClass.MEASUREMENT
