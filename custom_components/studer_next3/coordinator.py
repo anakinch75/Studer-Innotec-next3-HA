@@ -60,37 +60,22 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
         return self._client
 
-    async def _read_n(
-        self, client: ModbusTcpClient, address: int, count: int, slave: int, key: str
-    ) -> list[int] | None:
-        """Read `count` holding registers. Returns list or None on error."""
-        try:
-            regs = await client.read_holding_registers(address, count, slave)
-        except ModbusTcpError as err:
-            _LOGGER.warning(
-                "Modbus exception reading %s (addr=%s count=%s slave=%s): %s",
-                key, address, count, slave, err,
-            )
-            return None
-        except (OSError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Network error reading %s: %s", key, err)
-            self._client = None
-            return None
-        if len(regs) < count:
-            _LOGGER.warning(
-                "Short read for %s (addr=%s count=%s): got %d", key, address, count, len(regs)
-            )
-            return None
-        _LOGGER.debug("Read %s addr=%s slave=%s: %s", key, address, slave, regs)
-        return regs
-
     async def _read_register(
         self, client: ModbusTcpClient, reg: ModbusRegisterDef
     ) -> float | None:
         """Read one register definition. Returns decoded float or None on error."""
         count = 2 if reg.data_type == "float32" else 4
-        regs = await self._read_n(client, reg.address, count, reg.slave, reg.key)
-        if regs is None:
+        try:
+            regs = await client.read_holding_registers(reg.address, count, reg.slave)
+        except ModbusTcpError as err:
+            _LOGGER.warning("Modbus exception reading %s: %s", reg.key, err)
+            return None
+        except (OSError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Network error reading %s: %s", reg.key, err)
+            self._client = None
+            return None
+        if len(regs) < count:
+            _LOGGER.warning("Short read for %s: expected %d got %d", reg.key, count, len(regs))
             return None
         if reg.data_type == "float32":
             return _decode_float32(regs)
