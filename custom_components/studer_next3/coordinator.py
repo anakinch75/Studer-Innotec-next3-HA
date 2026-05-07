@@ -60,30 +60,40 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
         return self._client
 
+    async def _read2(
+        self, client: ModbusTcpClient, address: int, slave: int, key: str
+    ) -> list[int] | None:
+        """Read exactly 2 holding registers. Returns list or None on error."""
+        try:
+            regs = await client.read_holding_registers(address, 2, slave)
+        except ModbusTcpError as err:
+            _LOGGER.warning("Modbus exception reading %s at %s: %s", key, address, err)
+            return None
+        except (OSError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Network error reading %s at %s: %s", key, address, err)
+            self._client = None
+            return None
+        if len(regs) < 2:
+            _LOGGER.warning("Short read for %s at %s: got %d", key, address, len(regs))
+            return None
+        return regs
+
     async def _read_register(
         self, client: ModbusTcpClient, reg: ModbusRegisterDef
     ) -> float | None:
         """Read one register definition. Returns decoded float or None on error."""
-        count = 2 if reg.data_type == "float32" else 4
-        try:
-            registers = await client.read_holding_registers(reg.address, count, reg.slave)
-        except ModbusTcpError as err:
-            _LOGGER.warning("Modbus exception reading %s: %s", reg.key, err)
-            return None
-        except (OSError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Network error reading %s: %s", reg.key, err)
-            self._client = None
-            return None
-
-        if len(registers) < count:
-            _LOGGER.warning(
-                "Short read for %s: expected %d, got %d", reg.key, count, len(registers)
-            )
+        regs = await self._read2(client, reg.address, reg.slave, reg.key)
+        if regs is None:
             return None
 
         if reg.data_type == "float32":
-            return _decode_float32(registers)
-        return _decode_float64(registers)
+            return _decode_float32(regs)
+
+        # float64: read the next 2 registers (address + 2) on the same slave
+        regs2 = await self._read2(client, reg.address + 2, reg.slave, reg.key)
+        if regs2 is None:
+            return None
+        return _decode_float64(regs + regs2)
 
     async def _async_update_data(self) -> dict[str, Any]:
         async with self._lock:
