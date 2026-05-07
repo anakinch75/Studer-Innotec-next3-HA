@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Studer Next3 — connexion Modbus",
+        "description": "Entrez l'adresse IP et le port TCP du Studer Next3.",
+        "data": {
+          "host": "Adresse IP",
+          "port": "Port Modbus TCP",
+          "scan_interval": "Intervalle de scrutation (secondes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à l'appareil.",
+      "invalid_response": "L'appareil a répondu avec une erreur Modbus.",
+      "unknown": "Erreur inattendue."
+    },
+    "abort": {
+      "already_configured": "Cet appareil est déjà configuré."
+    }
+  }
+}
