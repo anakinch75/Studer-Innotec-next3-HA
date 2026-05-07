@@ -26,6 +26,7 @@ class ModbusRegisterDef:
     unit: str
     device_class: str
     state_class: str
+    scale: float = 1.0
 
 
 REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
@@ -45,7 +46,8 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=7,
         address=24,
         data_type=DataType.FLOAT64,
-        unit=UnitOfEnergy.WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        scale=0.001,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -55,7 +57,8 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=7,
         address=36,
         data_type=DataType.FLOAT64,
-        unit=UnitOfEnergy.WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        scale=0.001,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -75,7 +78,8 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=3924,
         data_type=DataType.FLOAT64,
-        unit=UnitOfEnergy.WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        scale=0.001,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -95,7 +99,8 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=7519,
         data_type=DataType.FLOAT64,
-        unit=UnitOfEnergy.WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        scale=0.001,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -115,7 +120,8 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=8410,
         data_type=DataType.FLOAT64,
-        unit=UnitOfEnergy.WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        scale=0.001,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -125,7 +131,8 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=8422,
         data_type=DataType.FLOAT64,
-        unit=UnitOfEnergy.WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        scale=0.001,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),

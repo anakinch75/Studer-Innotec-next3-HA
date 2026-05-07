@@ -76,9 +76,8 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         if len(regs) < count:
             _LOGGER.warning("Short read for %s: expected %d got %d", reg.key, count, len(regs))
             return None
-        if reg.data_type is DataType.FLOAT32:
-            return _decode_float32(regs)
-        return _decode_float64(regs)
+        value = _decode_float32(regs) if reg.data_type is DataType.FLOAT32 else _decode_float64(regs)
+        return value * reg.scale
 
     async def _async_update_data(self) -> dict[str, Any]:
         async with self._lock:
