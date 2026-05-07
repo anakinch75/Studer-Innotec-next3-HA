@@ -39,7 +39,7 @@ async def _test_connection(host: str, port: int) -> str | None:
             return "cannot_connect"
         # Quick sanity read: battery SOC register on slave 1
         result = await asyncio.wait_for(
-            client.read_holding_registers(address=8426, count=2, slave=1),
+            client.read_holding_registers(8426, 2, 1),
             timeout=_CONNECT_TIMEOUT,
         )
         if result.isError():

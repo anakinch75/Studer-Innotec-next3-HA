@@ -84,9 +84,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         count = _register_count(reg.data_type)
         try:
             result = await client.read_holding_registers(
-                address=reg.address,
-                count=count,
-                slave=reg.slave,
+                reg.address, count, reg.slave
             )
         except ModbusException as err:
             _LOGGER.warning("Modbus error reading %s: %s", reg.key, err)
