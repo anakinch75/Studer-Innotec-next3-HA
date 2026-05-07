@@ -40,7 +40,7 @@ Custom integration for the **Studer Innotec Next3** hybrid inverter/charger via 
 
 | Field | Default | Description |
 |---|---|---|
-| IP address | `172.22.22.50` | IP address of the Next3 on your network |
+| IP address | _(empty)_ | IP address of the Next3 on your network |
 | Modbus TCP port | `502` | Modbus TCP port (usually 502) |
 | Polling interval (s) | `15` | How often data is fetched (5–300 s) |
 

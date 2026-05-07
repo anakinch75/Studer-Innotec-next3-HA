@@ -4,7 +4,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfPower, UnitOfEnergy
 
 DOMAIN = "studer_next3"
-DEFAULT_HOST = "172.22.22.50"
+DEFAULT_HOST = ""
 DEFAULT_PORT = 502
 DEFAULT_SCAN_INTERVAL = 15
 
