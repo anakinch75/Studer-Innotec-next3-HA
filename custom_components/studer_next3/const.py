@@ -8,10 +8,6 @@ DEFAULT_HOST = ""
 DEFAULT_PORT = 502
 DEFAULT_SCAN_INTERVAL = 15
 
-CONF_HOST = "host"
-CONF_PORT = "port"
-CONF_SCAN_INTERVAL = "scan_interval"
-
 
 @dataclass
 class ModbusRegisterDef:
@@ -25,7 +21,6 @@ class ModbusRegisterDef:
     unit: str
     device_class: str
     state_class: str
-    scan_interval: int
 
 
 REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
@@ -38,7 +33,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        scan_interval=15,
     ),
     ModbusRegisterDef(
         key="ac_source_consumed_energy",
@@ -49,7 +43,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scan_interval=60,
     ),
     ModbusRegisterDef(
         key="ac_source_produced_energy",
@@ -60,7 +53,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scan_interval=60,
     ),
     ModbusRegisterDef(
         key="ac_loads_active_power",
@@ -71,7 +63,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        scan_interval=15,
     ),
     ModbusRegisterDef(
         key="ac_loads_consumed_energy",
@@ -82,7 +73,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scan_interval=60,
     ),
     ModbusRegisterDef(
         key="pv_power",
@@ -93,7 +83,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        scan_interval=15,
     ),
     ModbusRegisterDef(
         key="pv_energy",
@@ -104,7 +93,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scan_interval=60,
     ),
     ModbusRegisterDef(
         key="battery_power_raw",
@@ -115,7 +103,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        scan_interval=15,
     ),
     ModbusRegisterDef(
         key="battery_charging_energy",
@@ -126,7 +113,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scan_interval=60,
     ),
     ModbusRegisterDef(
         key="battery_discharging_energy",
@@ -137,7 +123,6 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scan_interval=60,
     ),
     ModbusRegisterDef(
         key="battery_soc",
@@ -148,6 +133,5 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         unit="%",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        scan_interval=15,
     ),
 ]
