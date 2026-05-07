@@ -32,10 +32,6 @@ def _decode_float64(registers: list[int]) -> float:
     return struct.unpack(">d", raw)[0]
 
 
-def _register_count(data_type: str) -> int:
-    """Return the number of 16-bit registers needed for a given data type."""
-    return 2 if data_type == "float32" else 4
-
 
 async def _compat_read_holding_registers(
     client: AsyncModbusTcpClient, address: int, count: int, slave: int
@@ -100,36 +96,39 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
         return self._client
 
+    async def _read_two_registers(
+        self, client: AsyncModbusTcpClient, address: int, slave: int
+    ) -> list[int] | None:
+        """Read 2 holding registers and return the register list, or None on error."""
+        try:
+            result = await _compat_read_holding_registers(client, address, 2, slave)
+        except ModbusException as err:
+            _LOGGER.warning("Modbus error at address %s: %s", address, err)
+            return None
+        if result.isError():
+            _LOGGER.warning("Error response at address %s", address)
+            return None
+        if len(result.registers) < 2:
+            _LOGGER.warning("Short read at address %s: got %d", address, len(result.registers))
+            return None
+        return list(result.registers)
+
     async def _read_register(
         self, client: AsyncModbusTcpClient, reg: ModbusRegisterDef
     ) -> float | None:
         """Read a single register definition and return its decoded value."""
-        count = _register_count(reg.data_type)
-        try:
-            result = await _compat_read_holding_registers(
-                client, reg.address, count, reg.slave
-            )
-        except ModbusException as err:
-            _LOGGER.warning("Modbus error reading %s: %s", reg.key, err)
-            return None
-
-        if result.isError():
-            _LOGGER.warning("Error response for register %s", reg.key)
-            return None
-
-        registers = result.registers
-        if len(registers) < count:
-            _LOGGER.warning(
-                "Not enough registers for %s: got %d, expected %d",
-                reg.key,
-                len(registers),
-                count,
-            )
+        regs = await self._read_two_registers(client, reg.address, reg.slave)
+        if regs is None:
             return None
 
         if reg.data_type == "float32":
-            return _decode_float32(registers)
-        return _decode_float64(registers)
+            return _decode_float32(regs)
+
+        # float64: read the second pair of registers (address + 2)
+        regs2 = await self._read_two_registers(client, reg.address + 2, reg.slave)
+        if regs2 is None:
+            return None
+        return _decode_float64(regs + regs2)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Studer Next3 — called by HA on each interval."""
