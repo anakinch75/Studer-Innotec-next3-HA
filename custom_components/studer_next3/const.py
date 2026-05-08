@@ -1,5 +1,5 @@
 """Constants for Studer Next3 integration."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -17,6 +17,19 @@ DEFAULT_HOST = ""
 DEFAULT_PORT = 502
 DEFAULT_SCAN_INTERVAL = 15
 
+# Device groups — each becomes a sub-device under the main "Studer Next3" hub
+GROUP_GRID = "grid"
+GROUP_PV = "pv"
+GROUP_BATTERY = "battery"
+GROUP_INVERTER = "inverter"
+
+GROUP_NAMES: dict[str, str] = {
+    GROUP_GRID: "Grid & Loads",
+    GROUP_PV: "Solar PV",
+    GROUP_BATTERY: "Battery",
+    GROUP_INVERTER: "Inverter",
+}
+
 
 class DataType(str, Enum):
     FLOAT32 = "float32"
@@ -31,10 +44,12 @@ class ModbusRegisterDef:
     slave: int
     address: int
     data_type: DataType
+    group: str = GROUP_GRID
     unit: str | None = None
     device_class: str | None = None
     state_class: str | None = None
     scale: float = 1.0
+    suggested_display_precision: int | None = None
 
 
 REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
@@ -45,9 +60,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=7,
         address=0,
         data_type=DataType.FLOAT32,
+        group=GROUP_GRID,
         unit=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     ModbusRegisterDef(
         key="grid_voltage",
@@ -55,9 +72,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=7,
         address=2,
         data_type=DataType.FLOAT32,
+        group=GROUP_GRID,
         unit=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     ModbusRegisterDef(
         key="ac_source_active_power",
@@ -65,9 +84,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=7,
         address=8,
         data_type=DataType.FLOAT32,
+        group=GROUP_GRID,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     ModbusRegisterDef(
         key="ac_source_consumed_energy",
@@ -75,10 +96,12 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=7,
         address=24,
         data_type=DataType.FLOAT64,
+        group=GROUP_GRID,
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=0.001,
+        suggested_display_precision=2,
     ),
     ModbusRegisterDef(
         key="ac_source_produced_energy",
@@ -86,10 +109,12 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=7,
         address=36,
         data_type=DataType.FLOAT64,
+        group=GROUP_GRID,
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=0.001,
+        suggested_display_precision=2,
     ),
     # ── AC Loads / System (slave 1) ──────────────────────────────────────────
     ModbusRegisterDef(
@@ -98,9 +123,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=3908,
         data_type=DataType.FLOAT32,
+        group=GROUP_GRID,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     ModbusRegisterDef(
         key="ac_loads_consumed_energy",
@@ -108,10 +135,12 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=3924,
         data_type=DataType.FLOAT64,
+        group=GROUP_GRID,
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=0.001,
+        suggested_display_precision=2,
     ),
     # ── PV / System (slave 1) ────────────────────────────────────────────────
     ModbusRegisterDef(
@@ -120,9 +149,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=7505,
         data_type=DataType.FLOAT32,
+        group=GROUP_PV,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     ModbusRegisterDef(
         key="pv_energy",
@@ -130,10 +161,12 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=7519,
         data_type=DataType.FLOAT64,
+        group=GROUP_PV,
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=0.001,
+        suggested_display_precision=2,
     ),
     # ── Battery / System (slave 1) ───────────────────────────────────────────
     ModbusRegisterDef(
@@ -142,9 +175,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=8400,
         data_type=DataType.FLOAT32,
+        group=GROUP_BATTERY,
         unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     ModbusRegisterDef(
         key="battery_charging_energy",
@@ -152,10 +187,12 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=8410,
         data_type=DataType.FLOAT64,
+        group=GROUP_BATTERY,
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=0.001,
+        suggested_display_precision=2,
     ),
     ModbusRegisterDef(
         key="battery_discharging_energy",
@@ -163,10 +200,12 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=8422,
         data_type=DataType.FLOAT64,
+        group=GROUP_BATTERY,
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=0.001,
+        suggested_display_precision=2,
     ),
     ModbusRegisterDef(
         key="battery_soc",
@@ -174,9 +213,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=1,
         address=8426,
         data_type=DataType.FLOAT32,
+        group=GROUP_BATTERY,
         unit="%",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # ── Battery device (slave 2) ─────────────────────────────────────────────
     ModbusRegisterDef(
@@ -185,9 +226,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=2,
         address=318,
         data_type=DataType.FLOAT32,
+        group=GROUP_BATTERY,
         unit=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     ModbusRegisterDef(
         key="battery_current",
@@ -195,9 +238,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=2,
         address=320,
         data_type=DataType.FLOAT32,
+        group=GROUP_BATTERY,
         unit=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     ModbusRegisterDef(
         key="battery_soh",
@@ -205,9 +250,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=2,
         address=326,
         data_type=DataType.FLOAT32,
+        group=GROUP_BATTERY,
         unit="%",
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     ModbusRegisterDef(
         key="battery_temperature",
@@ -215,9 +262,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=2,
         address=329,
         data_type=DataType.FLOAT32,
+        group=GROUP_BATTERY,
         unit=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # ── Next3 inverter (slave 14) ────────────────────────────────────────────
     ModbusRegisterDef(
@@ -226,6 +275,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=14,
         address=5100,
         data_type=DataType.UINT16,
+        group=GROUP_INVERTER,
         unit=None,
         device_class=None,
         state_class=None,
@@ -236,6 +286,7 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=14,
         address=5102,
         data_type=DataType.UINT16,
+        group=GROUP_INVERTER,
         unit=None,
         device_class=None,
         state_class=None,
@@ -246,9 +297,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=14,
         address=6900,
         data_type=DataType.FLOAT32,
+        group=GROUP_PV,
         unit=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     ModbusRegisterDef(
         key="pv1_current",
@@ -256,8 +309,10 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         slave=14,
         address=6902,
         data_type=DataType.FLOAT32,
+        group=GROUP_PV,
         unit=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
 ]
