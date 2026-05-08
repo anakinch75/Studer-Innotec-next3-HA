@@ -1,7 +1,7 @@
 {
   "domain": "studer_next3",
   "name": "Studer Next3",
-  "version": "0.5.1",
+  "version": "0.5.3",
   "config_flow": true,
   "documentation": "https://github.com/anakinch75/Studer-Innotec-next3-HA",
   "issue_tracker": "https://github.com/anakinch75/Studer-Innotec-next3-HA/issues",
@@ -9,6 +9,5 @@
   "dependencies": [],
   "codeowners": ["@anakinch75"],
   "integration_type": "device",
-  "iot_class": "local_polling",
-  "homeassistant": "2024.4.0"
+  "iot_class": "local_polling"
 }
