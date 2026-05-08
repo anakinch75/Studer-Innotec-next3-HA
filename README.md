@@ -148,6 +148,28 @@ Addresses from the official [Studer next-modbus register map v10.154](https://gi
 
 ---
 
+## Migrating from an older version
+
+### Energy sensors showing Wh instead of kWh (upgrading from < 0.4.0)
+
+Since v0.4.0, energy sensors report in **kWh**. If you installed the integration before v0.4.0, Home Assistant may have cached the old **Wh** unit and will keep converting values automatically, resulting in values 1 000× too large.
+
+Fix for each of the 6 energy sensors:
+
+1. Go to **Settings → Entities**
+2. Search for the sensor (e.g. *PV Energy*)
+3. Click on it → ⚙️ → **Unit of measurement** → change `Wh` to `kWh`
+
+Sensors to update:
+- PV Energy
+- AC-Source Consumed Energy
+- AC-Source Produced Energy
+- AC-Loads Consumed Energy
+- Battery Charging Energy
+- Battery Discharging Energy
+
+---
+
 ## Troubleshooting
 
 **Cannot connect to device**
