@@ -58,6 +58,22 @@ async def test_energy_scale_applied(coordinator):
     assert result == pytest.approx(raw_wh * 0.001, rel=1e-6)
 
 
+async def test_uint16_read_single_register(coordinator):
+    """UINT16 registers must read exactly 1 register and return the raw value."""
+    from custom_components.studer_next3.modbus_client import ModbusTcpClient
+    from unittest.mock import AsyncMock as _AM
+    uint16_reg = next(r for r in REGISTER_DEFINITIONS if r.key == "inverter_status")
+
+    mock_client = _AM(spec=ModbusTcpClient)
+    mock_client.connected = True
+    mock_client.read_holding_registers.return_value = [3]  # single register
+
+    result = await coordinator._read_register(mock_client, uint16_reg)
+
+    mock_client.read_holding_registers.assert_called_once_with(5100, 1, 14)
+    assert result == 3.0
+
+
 async def test_all_register_keys_present(coordinator):
     async def mock_read(client, reg):
         return 42.0

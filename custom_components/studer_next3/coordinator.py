@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, DataType, REGISTER_DEFINITIONS, ModbusRegisterDef
+
+_REGISTER_COUNTS = {DataType.FLOAT32: 2, DataType.FLOAT64: 4, DataType.UINT16: 1}
 from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +65,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, client: ModbusTcpClient, reg: ModbusRegisterDef
     ) -> float | None:
         """Read one register definition. Returns decoded float or None on error."""
-        count = 2 if reg.data_type is DataType.FLOAT32 else 4
+        count = _REGISTER_COUNTS[reg.data_type]
         try:
             regs = await client.read_holding_registers(reg.address, count, reg.slave)
         except ModbusTcpError as err:
@@ -76,7 +78,12 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         if len(regs) < count:
             _LOGGER.warning("Short read for %s: expected %d got %d", reg.key, count, len(regs))
             return None
-        value = _decode_float32(regs) if reg.data_type is DataType.FLOAT32 else _decode_float64(regs)
+        if reg.data_type is DataType.FLOAT32:
+            value = _decode_float32(regs)
+        elif reg.data_type is DataType.FLOAT64:
+            value = _decode_float64(regs)
+        else:
+            value = float(regs[0])
         return value * reg.scale
 
     async def _async_update_data(self) -> dict[str, Any]:
