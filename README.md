@@ -52,9 +52,9 @@ No external dependencies — uses a native asyncio Modbus TCP client.
 
 ## Available sensors
 
-All sensors are grouped under a single device called **Studer Next3**.
+Sensors are organised into **4 sub-devices** under the main **Studer Next3** hub, visible in **Settings → Devices & services → Studer Next3**.
 
-### Grid / AC Source
+### 🔌 Grid & Loads
 
 | Sensor | Unit | Description |
 |---|---|---|
@@ -63,15 +63,10 @@ All sensors are grouped under a single device called **Studer Next3**.
 | AC-Source Active Power | W | Positive = import, negative = export |
 | AC-Source Consumed Energy | kWh | Cumulative energy imported from grid |
 | AC-Source Produced Energy | kWh | Cumulative energy exported to grid |
-
-### AC Loads
-
-| Sensor | Unit | Description |
-|---|---|---|
 | AC-Loads Active Power | W | Total AC load consumption |
 | AC-Loads Consumed Energy | kWh | Cumulative AC load energy |
 
-### Solar PV
+### ☀️ Solar PV
 
 | Sensor | Unit | Description |
 |---|---|---|
@@ -80,31 +75,31 @@ All sensors are grouped under a single device called **Studer Next3**.
 | PV1 Voltage | V | DC voltage on PV input 1 |
 | PV1 Current | A | DC current on PV input 1 |
 
-### Battery
+### 🔋 Battery
 
 | Sensor | Unit | Description |
 |---|---|---|
 | Battery Power | W | Positive = charging, negative = discharging |
 | Battery SOC | % | State of charge |
 | Battery Voltage | V | Battery pack voltage |
-| Battery Current | A | Charging current (positive) / discharging (negative) |
+| Battery Current | A | Positive = charging, negative = discharging |
 | Battery Temperature | °C | Battery temperature |
 | Battery State of Health | % | Long-term capacity degradation |
 | Battery Charging Energy | kWh | Cumulative energy charged |
 | Battery Discharging Energy | kWh | Cumulative energy discharged |
 
-### Inverter
+### ⚡ Inverter
 
 | Sensor | Unit | Description |
 |---|---|---|
-| Inverter Status | — | Operating mode (raw code, see note below) |
-| Inverter Errors | — | Active error flags (raw bitfield) |
+| Inverter Status | — | Operating mode (integer code, see note below) |
+| Inverter Errors | — | Active error flags (integer bitfield) |
 
 > **Inverter Status codes** are raw integers from the Studer register map. Refer to the [official Studer Modbus documentation](https://technext3.studer-innotec.com/modbus-next) for the meaning of each value.
 
 > **Battery Power sign convention:** the raw Modbus register uses inverter convention (positive = discharging). This integration inverts the sign to match the HA energy dashboard (positive = charging).
 
-> **Battery Power (raw)** is hidden by default. Enable it in **Settings → Devices → Studer Next3** if needed.
+> **Battery Power (raw)** is hidden by default. Enable it in **Settings → Devices → Battery** if needed.
 
 ---
 
