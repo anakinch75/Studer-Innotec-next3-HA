@@ -3,6 +3,8 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/v/release/anakinch75/Studer-Innotec-next3-HA)](https://github.com/anakinch75/Studer-Innotec-next3-HA/releases)
 [![Tests](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/tests.yml/badge.svg)](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/tests.yml)
+[![HACS validation](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/validate.yml/badge.svg)](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/validate.yml)
+[![Hassfest](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/hassfest.yml/badge.svg)](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/hassfest.yml)
 
 Custom integration for the **Studer Innotec Next3** hybrid inverter/charger via Modbus TCP.  
 No external dependencies — uses a native asyncio Modbus TCP client.
@@ -11,7 +13,7 @@ No external dependencies — uses a native asyncio Modbus TCP client.
 
 ## Prerequisites
 
-- Home Assistant **≥ 2024.4**
+- Home Assistant **≥ 2024.4** (recommended: latest stable)
 - The Studer Next3 must be reachable on your local network via **Modbus TCP** (default port **502**)
 - Modbus TCP must be enabled on the Next3 (see the Studer configuration portal)
 
