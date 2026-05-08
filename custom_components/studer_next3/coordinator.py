@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, DataType, REGISTER_DEFINITIONS, ModbusRegisterDef
 
-_REGISTER_COUNTS = {DataType.FLOAT32: 2, DataType.FLOAT64: 4, DataType.UINT16: 1}
+_REGISTER_COUNTS = {DataType.FLOAT32: 2, DataType.FLOAT64: 4, DataType.UINT16: 2}
 from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _LOGGER = logging.getLogger(__name__)

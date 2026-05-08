@@ -66,11 +66,11 @@ async def test_uint16_read_single_register(coordinator):
 
     mock_client = _AM(spec=ModbusTcpClient)
     mock_client.connected = True
-    mock_client.read_holding_registers.return_value = [3]  # single register
+    mock_client.read_holding_registers.return_value = [3, 0]  # two registers, only first used
 
     result = await coordinator._read_register(mock_client, uint16_reg)
 
-    mock_client.read_holding_registers.assert_called_once_with(5100, 1, 14)
+    mock_client.read_holding_registers.assert_called_once_with(5100, 2, 14)
     assert result == 3.0
 
 
