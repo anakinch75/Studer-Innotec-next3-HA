@@ -83,7 +83,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         elif reg.data_type is DataType.FLOAT64:
             value = _decode_float64(regs)
         else:
-            value = float(regs[0])
+            return int(regs[0])
         return value * reg.scale
 
     async def _async_update_data(self) -> dict[str, Any]:

@@ -71,7 +71,8 @@ async def test_uint16_read_single_register(coordinator):
     result = await coordinator._read_register(mock_client, uint16_reg)
 
     mock_client.read_holding_registers.assert_called_once_with(5100, 2, 14)
-    assert result == 3.0
+    assert result == 3
+    assert isinstance(result, int)
 
 
 async def test_all_register_keys_present(coordinator):
