@@ -11,9 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, DataType, REGISTER_DEFINITIONS, ModbusRegisterDef
+from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _REGISTER_COUNTS = {DataType.FLOAT32: 2, DataType.FLOAT64: 4, DataType.UINT16: 2}
-from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _LOGGER = logging.getLogger(__name__)
 _CONNECT_TIMEOUT = 10

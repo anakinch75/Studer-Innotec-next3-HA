@@ -81,8 +81,9 @@ class ModbusTcpClient:
         )
 
         try:
-            assert self._writer is not None
-            assert self._reader is not None
+            if self._writer is None or self._reader is None:
+                raise OSError("Not connected")
+
             self._writer.write(mbap + pdu)
             await self._writer.drain()
 
