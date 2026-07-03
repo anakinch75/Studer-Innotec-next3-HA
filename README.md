@@ -120,6 +120,58 @@ Go to **Settings → Dashboards → Energy** and configure:
 
 ---
 
+## Automation examples
+
+![Ecosystem diagram](docs/ecosystem.svg)
+
+The integration exposes real-time power flow data that makes the following automations possible entirely within Home Assistant — no cloud, no external service.
+
+### EV charging on PV surplus
+
+Charge your electric vehicle only when the system is exporting to the grid (i.e. PV production exceeds home consumption):
+
+```yaml
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.studer_next3_ac_source_active_power
+    below: -500          # exporting more than 500 W to grid
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.wallbox_charge
+```
+
+`AC-Source Active Power` is **negative when exporting** (surplus available) and positive when importing. Adjust the threshold to your EV charger's minimum power requirement.
+
+### Heat pump / AC
+
+Run climate systems when battery is charged or PV production exceeds consumption:
+
+```yaml
+condition:
+  - condition: or
+    conditions:
+      - condition: numeric_state
+        entity_id: sensor.studer_next3_battery_soc
+        above: 80
+      - condition: template
+        value_template: >
+          {{ states('sensor.studer_next3_pv_power') | float >
+             states('sensor.studer_next3_ac_loads_active_power') | float }}
+```
+
+### Other use cases
+
+| Use case | Key sensor | Condition |
+|---|---|---|
+| Water heater / pool pump | `pv_power` | `> threshold` & `battery_soc > min` |
+| Cave / cellar climate | `pv_power` | `> threshold` |
+| Smart appliances | `pv_power`, `battery_soc` | Both above thresholds |
+
+> For Modbus register details and Next3 configuration, refer to the [Studer Modbus documentation](https://technext3.studer-innotec.com/modbus-next).
+
+---
+
 ## Modbus register mapping
 
 Addresses from the official [Studer next-modbus register map v10.154](https://github.com/studer-innotec/next-modbus).
