@@ -105,6 +105,43 @@ Sensors are organised into **4 sub-devices** under the main **Studer Next3** hub
 
 ---
 
+## Writable settings _(v0.6.0+)_
+
+In addition to sensors, the integration exposes writable entities that let you change Next3 parameters directly from Home Assistant.
+
+> **Note:** writes go to **RAM only** (volatile). Values reset to the inverter's saved configuration on power cycle. For persistent changes, use Studer's own configuration portal.
+
+### 🔋 Battery — Number entities
+
+| Entity | Unit | Range | Register | Slave | Description |
+|---|---|---|---|---|---|
+| SOC for Backup | % | 0–100 | 346 | 2 | Minimum SOC the inverter keeps as backup reserve |
+| SOC for End of Charge | % | 0–100 | 342 | 2 | SOC target at which charging stops |
+| SOC for Grid Feeding | % | 0–100 | 344 | 2 | Minimum SOC required before grid injection is allowed |
+
+### 🔌 Grid & Loads — Switch entity
+
+| Entity | Register | Slave | Description |
+|---|---|---|---|
+| Grid-Feeding Allowed | 1815 | 7 | Enable/disable injection of surplus PV power to the grid |
+
+When **Grid-Feeding Allowed** is OFF and batteries are full, the Next3 will throttle PV production to match local consumption — surplus is curtailed rather than exported.
+
+### Automation example — disable grid feeding at night
+
+```yaml
+alias: "Disable grid feeding after sunset"
+trigger:
+  - platform: sun
+    event: sunset
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.studer_next3_grid_feeding_allowed
+```
+
+---
+
 ## Energy dashboard
 
 Go to **Settings → Dashboards → Energy** and configure:
@@ -176,6 +213,8 @@ condition:
 
 Addresses from the official [Studer next-modbus register map v10.154](https://github.com/studer-innotec/next-modbus).
 
+### Read-only (sensors)
+
 | Sensor | Slave | Address | Type |
 |---|---|---|---|
 | Grid Frequency | 7 | 0 | float32 |
@@ -199,6 +238,17 @@ Addresses from the official [Studer next-modbus register map v10.154](https://gi
 | Inverter Errors | 14 | 5102 | uint16 |
 | PV1 Voltage | 14 | 6900 | float32 |
 | PV1 Current | 14 | 6902 | float32 |
+
+### Read/Write (writable settings)
+
+Uses FC16 (Write Multiple Registers). Writes are volatile (RAM only).
+
+| Entity | Slave | Address | Type |
+|---|---|---|---|
+| SOC for End of Charge | 2 | 342 | float32 |
+| SOC for Grid Feeding | 2 | 344 | float32 |
+| SOC for Backup | 2 | 346 | float32 |
+| Grid-Feeding Allowed | 7 | 1815 | bool |
 
 ---
 
