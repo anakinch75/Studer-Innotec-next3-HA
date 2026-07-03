@@ -10,7 +10,16 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, DataType, REGISTER_DEFINITIONS, ModbusRegisterDef
+from .const import (
+    DOMAIN,
+    DataType,
+    NUMBER_DEFINITIONS,
+    NumberRegisterDef,
+    REGISTER_DEFINITIONS,
+    ModbusRegisterDef,
+    SWITCH_DEFINITIONS,
+    SwitchRegisterDef,
+)
 from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _REGISTER_COUNTS = {DataType.FLOAT32: 2, DataType.FLOAT64: 4, DataType.UINT16: 2}
@@ -27,6 +36,12 @@ def _decode_float32(registers: list[int]) -> float:
 def _decode_float64(registers: list[int]) -> float:
     raw = struct.pack(">HHHH", registers[0], registers[1], registers[2], registers[3])
     return struct.unpack(">d", raw)[0]
+
+
+def _encode_float32(value: float) -> list[int]:
+    raw = struct.pack(">f", value)
+    r0, r1 = struct.unpack(">HH", raw)
+    return [r0, r1]
 
 
 class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -86,6 +101,40 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             return int(regs[0])
         return value * reg.scale
 
+    async def _read_float32(
+        self, client: ModbusTcpClient, address: int, slave: int
+    ) -> float | None:
+        """Read a single float32 value from address/slave."""
+        try:
+            regs = await client.read_holding_registers(address, 2, slave)
+        except ModbusTcpError as err:
+            _LOGGER.warning("Modbus exception reading %d (slave %d): %s", address, slave, err)
+            return None
+        except (OSError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Network error reading %d (slave %d): %s", address, slave, err)
+            self._client = None
+            return None
+        if len(regs) < 2:
+            return None
+        return _decode_float32(regs)
+
+    async def _read_bool(
+        self, client: ModbusTcpClient, address: int, slave: int
+    ) -> bool | None:
+        """Read a single bool value. Uses count=2 for Next3 compatibility."""
+        try:
+            regs = await client.read_holding_registers(address, 2, slave)
+        except ModbusTcpError as err:
+            _LOGGER.warning("Modbus exception reading bool %d (slave %d): %s", address, slave, err)
+            return None
+        except (OSError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Network error reading bool %d (slave %d): %s", address, slave, err)
+            self._client = None
+            return None
+        if len(regs) < 1:
+            return None
+        return bool(regs[0])
+
     async def _async_update_data(self) -> dict[str, Any]:
         async with self._lock:
             try:
@@ -102,7 +151,25 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             raw = data.get("battery_power_raw")
             data["battery_power"] = (-raw) if raw is not None else None
 
+            for num in NUMBER_DEFINITIONS:
+                data[num.key] = await self._read_float32(client, num.address, num.slave)
+
+            for sw in SWITCH_DEFINITIONS:
+                data[sw.key] = await self._read_bool(client, sw.address, sw.slave)
+
             return data
+
+    async def async_write_float32(self, address: int, value: float, slave: int) -> None:
+        """Write a float32 value via FC16."""
+        async with self._lock:
+            client = await self._get_client()
+            await client.write_holding_registers(address, _encode_float32(value), slave)
+
+    async def async_write_bool(self, address: int, value: bool, slave: int) -> None:
+        """Write a bool value via FC16. Sends 2 registers for Next3 compatibility."""
+        async with self._lock:
+            client = await self._get_client()
+            await client.write_holding_registers(address, [1 if value else 0, 0], slave)
 
     async def async_shutdown(self) -> None:
         if self._client:

@@ -9,6 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _MODBUS_PROTOCOL_ID = 0x0000
 _FC_READ_HOLDING = 0x03
+_FC_WRITE_MULTIPLE = 0x10
 
 
 class ModbusTcpError(Exception):
@@ -113,6 +114,62 @@ class ModbusTcpClient:
                 registers.append(val)
 
             return registers
+
+        except (ModbusTcpError, asyncio.TimeoutError, OSError):
+            raise
+        except Exception as err:
+            self.close()
+            raise OSError(f"Unexpected Modbus TCP error: {err}") from err
+
+    async def write_holding_registers(
+        self, address: int, values: list[int], slave: int
+    ) -> None:
+        """Write `values` (list of uint16) to holding registers starting at `address` on `slave`.
+
+        Uses FC16 (Write Multiple Registers).
+        Raises ModbusTcpError on Modbus exception response.
+        Raises OSError / asyncio.TimeoutError on network errors.
+        """
+        if not self.connected:
+            raise OSError("Not connected")
+
+        self._transaction_id = (self._transaction_id + 1) & 0xFFFF
+
+        byte_count = len(values) * 2
+        # PDU: FC + starting address + quantity + byte count + register data
+        pdu = struct.pack(">BHHB", _FC_WRITE_MULTIPLE, address, len(values), byte_count)
+        pdu += struct.pack(f">{len(values)}H", *values)
+
+        mbap = struct.pack(
+            ">HHHB",
+            self._transaction_id,
+            _MODBUS_PROTOCOL_ID,
+            len(pdu) + 1,
+            slave,
+        )
+
+        try:
+            if self._writer is None or self._reader is None:
+                raise OSError("Not connected")
+
+            self._writer.write(mbap + pdu)
+            await self._writer.drain()
+
+            resp_mbap = await asyncio.wait_for(
+                self._reader.readexactly(6), timeout=self._timeout
+            )
+            _, _, resp_length = struct.unpack(">HHH", resp_mbap)
+
+            resp_body = await asyncio.wait_for(
+                self._reader.readexactly(resp_length), timeout=self._timeout
+            )
+
+            func_code = resp_body[1]
+            if func_code & 0x80:
+                exception_code = resp_body[2] if len(resp_body) > 2 else 0
+                raise ModbusTcpError(
+                    f"Modbus exception FC={func_code:#x} code={exception_code}"
+                )
 
         except (ModbusTcpError, asyncio.TimeoutError, OSError):
             raise

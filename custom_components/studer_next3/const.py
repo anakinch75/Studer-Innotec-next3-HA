@@ -52,6 +52,77 @@ class ModbusRegisterDef:
     suggested_display_precision: int | None = None
 
 
+@dataclass
+class NumberRegisterDef:
+    key: str
+    name: str
+    slave: int
+    address: int
+    group: str
+    unit: str
+    min_value: float
+    max_value: float
+    step: float = 1.0
+    suggested_display_precision: int = 1
+
+
+NUMBER_DEFINITIONS: list[NumberRegisterDef] = [
+    NumberRegisterDef(
+        key="soc_for_backup",
+        name="SOC for Backup",
+        slave=2,
+        address=346,
+        group=GROUP_BATTERY,
+        unit="%",
+        min_value=0,
+        max_value=100,
+        step=1,
+    ),
+    NumberRegisterDef(
+        key="soc_for_end_of_charge",
+        name="SOC for End of Charge",
+        slave=2,
+        address=342,
+        group=GROUP_BATTERY,
+        unit="%",
+        min_value=0,
+        max_value=100,
+        step=1,
+    ),
+    NumberRegisterDef(
+        key="soc_for_grid_feeding",
+        name="SOC for Grid Feeding",
+        slave=2,
+        address=344,
+        group=GROUP_BATTERY,
+        unit="%",
+        min_value=0,
+        max_value=100,
+        step=1,
+    ),
+]
+
+
+@dataclass
+class SwitchRegisterDef:
+    key: str
+    name: str
+    slave: int
+    address: int
+    group: str
+
+
+SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
+    SwitchRegisterDef(
+        key="grid_feeding_allowed",
+        name="Grid-Feeding Allowed",
+        slave=7,
+        address=1815,
+        group=GROUP_GRID,
+    ),
+]
+
+
 REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
     # ── AC Source / Grid (slave 7) ───────────────────────────────────────────
     ModbusRegisterDef(

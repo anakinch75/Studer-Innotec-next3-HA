@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import StuderNext3Coordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
