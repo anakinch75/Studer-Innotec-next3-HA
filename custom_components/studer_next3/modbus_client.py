@@ -164,6 +164,8 @@ class ModbusTcpClient:
                 self._reader.readexactly(resp_length), timeout=self._timeout
             )
 
+            if len(resp_body) < 2:
+                raise ModbusTcpError(f"Truncated FC16 response: {len(resp_body)} bytes")
             func_code = resp_body[1]
             if func_code & 0x80:
                 exception_code = resp_body[2] if len(resp_body) > 2 else 0

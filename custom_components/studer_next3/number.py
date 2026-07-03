@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
@@ -10,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, NUMBER_DEFINITIONS, NumberRegisterDef, GROUP_NAMES
+from .const import DOMAIN, NUMBER_DEFINITIONS, NumberRegisterDef
 from .coordinator import StuderNext3Coordinator
-from .sensor import _hub_device_info, _group_device_info
+from .sensor import _group_device_info
 
 _LOGGER = logging.getLogger(__name__)
 

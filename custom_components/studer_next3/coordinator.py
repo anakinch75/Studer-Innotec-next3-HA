@@ -14,11 +14,9 @@ from .const import (
     DOMAIN,
     DataType,
     NUMBER_DEFINITIONS,
-    NumberRegisterDef,
     REGISTER_DEFINITIONS,
     ModbusRegisterDef,
     SWITCH_DEFINITIONS,
-    SwitchRegisterDef,
 )
 from .modbus_client import ModbusTcpClient, ModbusTcpError
 
@@ -131,7 +129,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Network error reading bool %d (slave %d): %s", address, slave, err)
             self._client = None
             return None
-        if len(regs) < 1:
+        if len(regs) < 2:
             return None
         return bool(regs[0])
 
@@ -166,10 +164,10 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             await client.write_holding_registers(address, _encode_float32(value), slave)
 
     async def async_write_bool(self, address: int, value: bool, slave: int) -> None:
-        """Write a bool value via FC16. Sends 2 registers for Next3 compatibility."""
+        """Write a bool value via FC16."""
         async with self._lock:
             client = await self._get_client()
-            await client.write_holding_registers(address, [1 if value else 0, 0], slave)
+            await client.write_holding_registers(address, [1 if value else 0], slave)
 
     async def async_shutdown(self) -> None:
         if self._client:
