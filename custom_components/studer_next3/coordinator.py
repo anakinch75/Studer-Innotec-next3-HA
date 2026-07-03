@@ -119,9 +119,9 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _read_bool(
         self, client: ModbusTcpClient, address: int, slave: int
     ) -> bool | None:
-        """Read a single bool value. Uses count=2 for Next3 compatibility."""
+        """Read a single bool value."""
         try:
-            regs = await client.read_holding_registers(address, 2, slave)
+            regs = await client.read_holding_registers(address, 1, slave)
         except ModbusTcpError as err:
             _LOGGER.warning("Modbus exception reading bool %d (slave %d): %s", address, slave, err)
             return None
@@ -129,7 +129,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Network error reading bool %d (slave %d): %s", address, slave, err)
             self._client = None
             return None
-        if len(regs) < 2:
+        if len(regs) < 1:
             return None
         return bool(regs[0])
 
