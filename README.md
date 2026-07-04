@@ -21,18 +21,9 @@ No external dependencies — uses a native asyncio Modbus TCP client.
 
 ## Installation
 
-### Via HACS (recommended)
-
-1. Open HACS in Home Assistant.
-2. Click the three-dot menu → **Custom repositories**.
-3. Add `https://github.com/anakinch75/Studer-Innotec-next3-HA` and select category **Integration**.
-4. Search for **Studer Next3** and click **Download**.
-5. Restart Home Assistant.
-
-### Manual installation
-
-1. Copy the `custom_components/studer_next3/` folder into your HA `config/custom_components/` directory.
-2. Restart Home Assistant.
+1. Open **HACS** in Home Assistant.
+2. Search for **Studer Next3** and click **Download**.
+3. Restart Home Assistant.
 
 ---
 
@@ -249,28 +240,6 @@ Uses FC16 (Write Multiple Registers). Writes are volatile (RAM only).
 | SOC for Grid Feeding | 2 | 344 | float32 |
 | SOC for Backup | 2 | 346 | float32 |
 | Grid-Feeding Allowed | 7 | 1815 | bool |
-
----
-
-## Migrating from an older version
-
-### Energy sensors showing Wh instead of kWh (upgrading from < 0.4.0)
-
-Since v0.4.0, energy sensors report in **kWh**. If you installed the integration before v0.4.0, Home Assistant may have cached the old **Wh** unit and will keep converting values automatically, resulting in values 1 000× too large.
-
-Fix for each of the 6 energy sensors:
-
-1. Go to **Settings → Entities**
-2. Search for the sensor (e.g. *PV Energy*)
-3. Click on it → ⚙️ → **Unit of measurement** → change `Wh` to `kWh`
-
-Sensors to update:
-- PV Energy
-- AC-Source Consumed Energy
-- AC-Source Produced Energy
-- AC-Loads Consumed Energy
-- Battery Charging Energy
-- Battery Discharging Energy
 
 ---
 
