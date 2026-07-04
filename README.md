@@ -1,6 +1,6 @@
 # Studer Next3 — Home Assistant integration
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/v/release/anakinch75/Studer-Innotec-next3-HA)](https://github.com/anakinch75/Studer-Innotec-next3-HA/releases)
 [![Tests](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/tests.yml/badge.svg)](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/tests.yml)
 [![HACS validation](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/validate.yml/badge.svg)](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/validate.yml)
@@ -126,7 +126,7 @@ trigger:
   - platform: sun
     event: sunset
 action:
-  - service: switch.turn_off
+  - action: switch.turn_off
     target:
       entity_id: switch.studer_next3_grid_feeding_allowed
 ```
@@ -154,6 +154,8 @@ Go to **Settings → Dashboards → Energy** and configure:
 
 The integration exposes real-time power flow data that makes the following automations possible entirely within Home Assistant — no cloud, no external service.
 
+> **Note on entity IDs:** IDs depend on the name you gave the integration entry during setup. Find exact IDs in **Settings → Entities** and search "studer".
+
 ### EV charging on PV surplus
 
 Charge your electric vehicle only when the system is exporting to the grid (i.e. PV production exceeds home consumption):
@@ -164,7 +166,7 @@ trigger:
     entity_id: sensor.studer_next3_ac_source_active_power
     below: -500          # exporting more than 500 W to grid
 action:
-  - service: switch.turn_on
+  - action: switch.turn_on
     target:
       entity_id: switch.wallbox_charge
 ```
@@ -202,7 +204,7 @@ condition:
 
 ## Modbus register mapping
 
-Addresses from the official [Studer next-modbus register map v10.154](https://github.com/studer-innotec/next-modbus).
+Addresses from the official [Studer next-modbus register map v10.153](https://github.com/studer-innotec/next-modbus).
 
 ### Read-only (sensors)
 
