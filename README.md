@@ -1,4 +1,4 @@
-# Studer Next3 — Home Assistant integration
+# Studer Next — Home Assistant integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/v/release/anakinch75/Studer-Innotec-next3-HA)](https://github.com/anakinch75/Studer-Innotec-next3-HA/releases)
@@ -6,7 +6,7 @@
 [![HACS validation](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/validate.yml/badge.svg)](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/validate.yml)
 [![Hassfest](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/hassfest.yml/badge.svg)](https://github.com/anakinch75/Studer-Innotec-next3-HA/actions/workflows/hassfest.yml)
 
-Custom integration for the **Studer Innotec Next3** hybrid inverter/charger via Modbus TCP.  
+Custom integration for **Studer Innotec Next3** (three-phase) and **Next1** (single-phase) hybrid inverter/chargers via Modbus TCP.  
 No external dependencies — uses a native asyncio Modbus TCP client.
 
 ---
@@ -14,8 +14,8 @@ No external dependencies — uses a native asyncio Modbus TCP client.
 ## Prerequisites
 
 - Home Assistant **≥ 2024.4** (recommended: latest stable)
-- The Studer Next3 must be reachable on your local network via **Modbus TCP** (default port **502**)
-- Modbus TCP must be enabled on the Next3 (see the Studer configuration portal)
+- A **Studer Innotec Next3** (three-phase) or **Next1** (single-phase) reachable on your local network via **Modbus TCP** (default port **502**)
+- Modbus TCP must be enabled on the device (see the Studer configuration portal)
 
 ---
 
@@ -35,7 +35,8 @@ No external dependencies — uses a native asyncio Modbus TCP client.
 
 | Field | Default | Description |
 |---|---|---|
-| IP address | _(empty)_ | IP address of the Next3 on your network |
+| Model | `Next3 (three-phase)` | Select the inverter model: **Next3** (three-phase) or **Next1** (single-phase) |
+| IP address | _(empty)_ | IP address of the inverter on your network |
 | Modbus TCP port | `502` | Modbus TCP port (usually 502) |
 | Polling interval (s) | `15` | How often data is fetched (5–300 s) |
 
@@ -45,7 +46,7 @@ No external dependencies — uses a native asyncio Modbus TCP client.
 
 ## Available sensors
 
-Sensors are organised into **4 sub-devices** under the main **Studer Next3** hub, visible in **Settings → Devices & services → Studer Next3**.
+Sensors are organised into **4 sub-devices** under the main hub device, visible in **Settings → Devices & services → Studer Next3** (or **Studer Next1** depending on the model you selected).
 
 ### 🔌 Grid & Loads
 
@@ -61,12 +62,14 @@ Sensors are organised into **4 sub-devices** under the main **Studer Next3** hub
 
 ### ☀️ Solar PV
 
-| Sensor | Unit | Description |
-|---|---|---|
-| PV Power | W | Total PV production (system) |
-| PV Energy | kWh | Cumulative solar energy |
-| PV1 Voltage | V | DC voltage on PV input 1 |
-| PV1 Current | A | DC current on PV input 1 |
+| Sensor | Unit | Description | Model |
+|---|---|---|---|
+| PV Power | W | Total PV production (system) | Both |
+| PV Energy | kWh | Cumulative solar energy | Both |
+| PV1 Voltage | V | DC voltage on PV input 1 (internal MPPT) | Next3 only |
+| PV1 Current | A | DC current on PV input 1 (internal MPPT) | Next3 only |
+
+> The Next1 does not have internal MPPT inputs — PV1 Voltage and PV1 Current sensors are not created for Next1 installations.
 
 ### 🔋 Battery
 
@@ -88,7 +91,7 @@ Sensors are organised into **4 sub-devices** under the main **Studer Next3** hub
 | Inverter Status | — | Operating mode (integer code, see note below) |
 | Inverter Errors | — | Active error flags (integer bitfield) |
 
-> **Inverter Status codes** are raw integers from the Studer register map. Refer to the [official Studer Modbus documentation](https://technext3.studer-innotec.com/modbus-next) for the meaning of each value.
+> **Inverter Status codes** are raw integers from the Studer register map. Refer to the [official Studer Modbus documentation](https://technext3.studer-innotec.com/modbus-next) for the meaning of each value. For the Next3 these come from slave 14 (addresses 5100/5102); for the Next1 from slave 29 (addresses 2700/2702).
 
 > **Battery Power sign convention:** the raw Modbus register uses inverter convention (positive = discharging). This integration inverts the sign to match the HA energy dashboard (positive = charging).
 
@@ -206,7 +209,7 @@ condition:
 
 Addresses from the official [Studer next-modbus register map v10.154](https://github.com/studer-innotec/next-modbus).
 
-### Read-only (sensors)
+### Read-only (sensors) — shared by Next1 and Next3
 
 | Sensor | Slave | Address | Type |
 |---|---|---|---|
@@ -227,10 +230,22 @@ Addresses from the official [Studer next-modbus register map v10.154](https://gi
 | Battery Current | 2 | 320 | float32 |
 | Battery State of Health | 2 | 326 | float32 |
 | Battery Temperature | 2 | 329 | float32 |
+
+### Read-only (sensors) — Next3 only (slave 14)
+
+| Sensor | Slave | Address | Type |
+|---|---|---|---|
 | Inverter Status | 14 | 5100 | uint16 |
 | Inverter Errors | 14 | 5102 | uint16 |
 | PV1 Voltage | 14 | 6900 | float32 |
 | PV1 Current | 14 | 6902 | float32 |
+
+### Read-only (sensors) — Next1 only (slave 29)
+
+| Sensor | Slave | Address | Type |
+|---|---|---|---|
+| Inverter Status | 29 | 2700 | uint16 |
+| Inverter Errors | 29 | 2702 | uint16 |
 
 ### Read/Write (writable settings)
 
@@ -255,8 +270,8 @@ Uses FC16 (Write Multiple Registers). Writes are volatile (RAM only).
 - The Next3 may have closed the TCP connection. The integration reconnects automatically.
 - Check **Settings → System → Logs** and filter by `studer_next3`.
 
-**Sensors on slave 2 or 14 show `unavailable`**
-- These registers (battery device, inverter) may not be accessible depending on your firmware version or system configuration.
+**Sensors on slave 2, 14 (Next3) or 29 (Next1) show `unavailable`**
+- These registers (battery device, inverter-specific) may not be accessible depending on your firmware version or system configuration.
 - The other sensors (slave 1 and 7) will continue to work normally.
 
 **Energy values reset unexpectedly**

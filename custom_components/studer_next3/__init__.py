@@ -28,13 +28,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     # Register hub device before platforms so via_device references resolve correctly
+    model_key = entry.data.get(CONF_MODEL, MODEL_NEXT3)
+    model_name = "Next3" if model_key == MODEL_NEXT3 else "Next1"
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Studer Innotec",
-        model="Next3",
-        name="Studer Next3",
+        model=model_name,
+        name=f"Studer {model_name}",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
