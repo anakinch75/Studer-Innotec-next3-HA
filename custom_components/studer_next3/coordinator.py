@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DOMAIN,
     DataType,
+    MODEL_DEVICE_DEFINITIONS,
+    MODEL_NEXT3,
     NUMBER_DEFINITIONS,
     REGISTER_DEFINITIONS,
     ModbusRegisterDef,
@@ -51,6 +53,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         host: str,
         port: int,
         scan_interval: int,
+        model: str = MODEL_NEXT3,
     ) -> None:
         super().__init__(
             hass,
@@ -60,6 +63,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self._host = host
         self._port = port
+        self._model = model
         self._client: ModbusTcpClient | None = None
         self._lock = asyncio.Lock()
 
@@ -143,7 +147,8 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(f"Connection error: {err}") from err
 
             data: dict[str, Any] = {}
-            for reg in REGISTER_DEFINITIONS:
+            all_regs = REGISTER_DEFINITIONS + MODEL_DEVICE_DEFINITIONS[self._model]
+            for reg in all_regs:
                 data[reg.key] = await self._read_register(client, reg)
 
             raw = data.get("battery_power_raw")

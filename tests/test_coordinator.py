@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.studer_next3.coordinator import StuderNext3Coordinator
-from custom_components.studer_next3.const import REGISTER_DEFINITIONS
+from custom_components.studer_next3.const import REGISTER_DEFINITIONS, NEXT3_DEVICE_DEFINITIONS
 
 
 @pytest.fixture
@@ -62,7 +62,7 @@ async def test_uint16_read_single_register(coordinator):
     """UINT16 registers must read exactly 1 register and return the raw value."""
     from custom_components.studer_next3.modbus_client import ModbusTcpClient
     from unittest.mock import AsyncMock as _AM
-    uint16_reg = next(r for r in REGISTER_DEFINITIONS if r.key == "inverter_status")
+    uint16_reg = next(r for r in NEXT3_DEVICE_DEFINITIONS if r.key == "inverter_status")
 
     mock_client = _AM(spec=ModbusTcpClient)
     mock_client.connected = True

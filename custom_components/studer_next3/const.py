@@ -17,6 +17,10 @@ DEFAULT_HOST = ""
 DEFAULT_PORT = 502
 DEFAULT_SCAN_INTERVAL = 15
 
+CONF_MODEL = "model"
+MODEL_NEXT3 = "next3"
+MODEL_NEXT1 = "next1"
+
 # Device groups — each becomes a sub-device under the main "Studer Next3" hub
 GROUP_GRID = "grid"
 GROUP_PV = "pv"
@@ -339,7 +343,11 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    # ── Next3 inverter (slave 14) ────────────────────────────────────────────
+]
+
+# ── Device-specific registers (model-dependent) ──────────────────────────────
+
+NEXT3_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
     ModbusRegisterDef(
         key="inverter_status",
         name="Inverter Status",
@@ -387,3 +395,33 @@ REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
         suggested_display_precision=2,
     ),
 ]
+
+NEXT1_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
+    ModbusRegisterDef(
+        key="inverter_status",
+        name="Inverter Status",
+        slave=29,
+        address=2700,
+        data_type=DataType.UINT16,
+        group=GROUP_INVERTER,
+        unit=None,
+        device_class=None,
+        state_class=None,
+    ),
+    ModbusRegisterDef(
+        key="inverter_errors",
+        name="Inverter Errors",
+        slave=29,
+        address=2702,
+        data_type=DataType.UINT16,
+        group=GROUP_INVERTER,
+        unit=None,
+        device_class=None,
+        state_class=None,
+    ),
+]
+
+MODEL_DEVICE_DEFINITIONS: dict[str, list[ModbusRegisterDef]] = {
+    MODEL_NEXT3: NEXT3_DEVICE_DEFINITIONS,
+    MODEL_NEXT1: NEXT1_DEVICE_DEFINITIONS,
+}

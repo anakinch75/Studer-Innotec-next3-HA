@@ -6,9 +6,10 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.studer_next3.const import DOMAIN
+from custom_components.studer_next3.const import DOMAIN, MODEL_NEXT1, MODEL_NEXT3
 
-USER_INPUT = {"host": "192.168.1.1", "port": 502, "scan_interval": 15}
+USER_INPUT_NEXT3 = {"model": MODEL_NEXT3, "host": "192.168.1.1", "port": 502, "scan_interval": 15}
+USER_INPUT_NEXT1 = {"model": MODEL_NEXT1, "host": "192.168.1.2", "port": 502, "scan_interval": 15}
 
 
 async def test_form_shown_on_init(hass: HomeAssistant):
@@ -19,7 +20,7 @@ async def test_form_shown_on_init(hass: HomeAssistant):
     assert result["step_id"] == "user"
 
 
-async def test_success_creates_entry(hass: HomeAssistant):
+async def test_success_creates_entry_next3(hass: HomeAssistant):
     with patch(
         "custom_components.studer_next3.config_flow._test_connection", return_value=None
     ):
@@ -27,12 +28,28 @@ async def test_success_creates_entry(hass: HomeAssistant):
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
+            result["flow_id"], USER_INPUT_NEXT3
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Studer Next3 (192.168.1.1)"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == USER_INPUT_NEXT3
+
+
+async def test_success_creates_entry_next1(hass: HomeAssistant):
+    with patch(
+        "custom_components.studer_next3.config_flow._test_connection", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT_NEXT1
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Studer Next1 (192.168.1.2)"
+    assert result["data"] == USER_INPUT_NEXT1
 
 
 async def test_cannot_connect_shows_error(hass: HomeAssistant):
@@ -44,7 +61,7 @@ async def test_cannot_connect_shows_error(hass: HomeAssistant):
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
+            result["flow_id"], USER_INPUT_NEXT3
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -58,7 +75,7 @@ async def test_duplicate_entry_aborts(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+        await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT_NEXT3)
 
     with patch(
         "custom_components.studer_next3.config_flow._test_connection", return_value=None
@@ -67,7 +84,7 @@ async def test_duplicate_entry_aborts(hass: HomeAssistant):
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
+            result["flow_id"], USER_INPUT_NEXT3
         )
 
     assert result["type"] == FlowResultType.ABORT

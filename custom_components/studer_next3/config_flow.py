@@ -9,16 +9,33 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_MODEL,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MODEL_NEXT1,
+    MODEL_NEXT3,
+)
 from .modbus_client import ModbusTcpClient, ModbusTcpError
 
 _LOGGER = logging.getLogger(__name__)
 
 _CONNECT_TIMEOUT = 10
 
+_MODEL_OPTIONS = [
+    {"value": MODEL_NEXT3, "label": "Next3 (three-phase)"},
+    {"value": MODEL_NEXT1, "label": "Next1 (single-phase)"},
+]
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_MODEL, default=MODEL_NEXT3): SelectSelector(
+            SelectSelectorConfig(options=_MODEL_OPTIONS, translation_key="model")
+        ),
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
@@ -76,8 +93,10 @@ class StuderNext3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if error:
                     errors["base"] = error
                 else:
+                    model = user_input[CONF_MODEL]
+                    model_label = "Next3" if model == MODEL_NEXT3 else "Next1"
                     return self.async_create_entry(
-                        title=f"Studer Next3 ({host})",
+                        title=f"Studer {model_label} ({host})",
                         data=user_input,
                     )
 

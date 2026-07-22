@@ -6,7 +6,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platfo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_MODEL, DEFAULT_SCAN_INTERVAL, DOMAIN, MODEL_NEXT3
 from .coordinator import StuderNext3Coordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
@@ -19,6 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         scan_interval=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        model=entry.data.get(CONF_MODEL, MODEL_NEXT3),
     )
 
     # Initial data fetch — raises ConfigEntryNotReady on failure
