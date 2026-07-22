@@ -204,7 +204,7 @@ condition:
 
 ## Modbus register mapping
 
-Addresses from the official [Studer next-modbus register map v10.153](https://github.com/studer-innotec/next-modbus).
+Addresses from the official [Studer next-modbus register map v10.154](https://github.com/studer-innotec/next-modbus).
 
 ### Read-only (sensors)
 
