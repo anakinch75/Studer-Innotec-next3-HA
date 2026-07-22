@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Studer Next — Modbus connection",
+        "title": "Studer Next1 & Next3 — Modbus connection",
         "description": "Enter the IP address and TCP port of your Studer Next device.",
         "data": {
           "model": "Model",

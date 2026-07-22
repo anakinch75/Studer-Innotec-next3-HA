@@ -1,6 +1,6 @@
 {
   "domain": "studer_next3",
-  "name": "Studer Next3",
+  "name": "Studer Next1 & Next3",
   "codeowners": ["@anakinch75"],
   "config_flow": true,
   "dependencies": [],
