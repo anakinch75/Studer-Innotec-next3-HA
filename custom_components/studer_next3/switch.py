@@ -1,4 +1,4 @@
-"""Switch entities for Studer Next3 — writable boolean settings."""
+"""Switch entities for Studer Next1/Next3 — writable boolean settings."""
 from __future__ import annotations
 
 import logging

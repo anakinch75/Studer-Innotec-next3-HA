@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for Studer Next3 via Modbus TCP."""
+"""DataUpdateCoordinator for Studer Next1/Next3 via Modbus TCP."""
 from __future__ import annotations
 
 import asyncio
@@ -45,7 +45,7 @@ def _encode_float32(value: float) -> list[int]:
 
 
 class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Coordinator that polls all Modbus registers and exposes the data dict."""
+    """Coordinator that polls all Modbus registers for a Next1 or Next3 device."""
 
     def __init__(
         self,
@@ -73,8 +73,9 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._client = ModbusTcpClient(self._host, self._port, timeout=_CONNECT_TIMEOUT)
             if not await self._client.connect():
                 self._client = None
+                model_label = "Next3" if self._model == MODEL_NEXT3 else "Next1"
                 raise UpdateFailed(
-                    f"Cannot connect to Studer Next3 at {self._host}:{self._port}"
+                    f"Cannot connect to Studer {model_label} at {self._host}:{self._port}"
                 )
         return self._client
 

@@ -1,4 +1,4 @@
-"""Sensor platform for Studer Next3."""
+"""Sensor platform for Studer Next1/Next3."""
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass

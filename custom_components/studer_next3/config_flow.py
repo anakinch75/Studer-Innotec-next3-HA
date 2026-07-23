@@ -1,4 +1,4 @@
-"""Config flow for Studer Next3."""
+"""Config flow for Studer Next1/Next3."""
 from __future__ import annotations
 
 import asyncio

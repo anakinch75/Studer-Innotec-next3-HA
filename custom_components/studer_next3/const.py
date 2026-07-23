@@ -1,4 +1,4 @@
-"""Constants for Studer Next3 integration."""
+"""Constants for Studer Next1/Next3 integration."""
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -21,7 +21,7 @@ CONF_MODEL = "model"
 MODEL_NEXT3 = "next3"
 MODEL_NEXT1 = "next1"
 
-# Device groups — each becomes a sub-device under the main "Studer Next3" hub
+# Device groups — each becomes a sub-device under the main "Studer Next1/Next3" hub
 GROUP_GRID = "grid"
 GROUP_PV = "pv"
 GROUP_BATTERY = "battery"

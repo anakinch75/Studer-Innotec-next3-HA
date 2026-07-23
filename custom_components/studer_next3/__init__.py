@@ -1,4 +1,4 @@
-"""Studer Next3 integration for Home Assistant."""
+"""Studer Next1/Next3 integration for Home Assistant."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Studer Next3 from a config entry."""
+    """Set up Studer Next1/Next3 from a config entry."""
     coordinator = StuderNext3Coordinator(
         hass,
         host=entry.data[CONF_HOST],
