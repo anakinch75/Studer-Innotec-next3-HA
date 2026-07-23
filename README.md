@@ -1,4 +1,4 @@
-# Studer Next — Home Assistant integration
+# Studer Innotec Next1 & Next3 Home Assistant integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/v/release/anakinch75/Studer-Innotec-next3-HA)](https://github.com/anakinch75/Studer-Innotec-next3-HA/releases)
