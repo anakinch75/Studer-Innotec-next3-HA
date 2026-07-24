@@ -106,9 +106,9 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         elif reg.data_type is DataType.FLOAT64:
             value = _decode_float64(regs)
         elif reg.data_type is DataType.UINT32:
-            return _decode_uint32(regs)
+            return int(_decode_uint32(regs) * reg.scale)
         else:
-            return int(regs[0])
+            return int(regs[0] * reg.scale)
         return value * reg.scale
 
     async def _read_float32(

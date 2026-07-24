@@ -6,7 +6,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.studer_next3.coordinator import StuderNext3Coordinator
-from custom_components.studer_next3.const import REGISTER_DEFINITIONS, NEXT3_DEVICE_DEFINITIONS, DataType
+from custom_components.studer_next3.const import (
+    REGISTER_DEFINITIONS,
+    NEXT3_DEVICE_DEFINITIONS,
+    NUMBER_DEFINITIONS,
+    SWITCH_DEFINITIONS,
+    MODEL_SWITCH_DEFINITIONS,
+    MODEL_NEXT1,
+    MODEL_NEXT3,
+    DataType,
+)
 
 
 @pytest.fixture
@@ -100,11 +109,54 @@ async def test_all_register_keys_present(coordinator):
     async def mock_read(client, reg):
         return 42.0
 
+    async def mock_read_float32(client, address, slave):
+        return 42.0
+
+    async def mock_read_bool(client, address, slave):
+        return True
+
     with patch.object(coordinator, "_get_client", return_value=AsyncMock()):
         with patch.object(coordinator, "_read_register", side_effect=mock_read):
-            data = await coordinator._async_update_data()
+            with patch.object(coordinator, "_read_float32", side_effect=mock_read_float32):
+                with patch.object(coordinator, "_read_bool", side_effect=mock_read_bool):
+                    data = await coordinator._async_update_data()
 
-    expected_keys = {reg.key for reg in REGISTER_DEFINITIONS} | {"battery_power"}
+    expected_keys = (
+        {reg.key for reg in REGISTER_DEFINITIONS}
+        | {reg.key for reg in NEXT3_DEVICE_DEFINITIONS}
+        | {reg.key for reg in NUMBER_DEFINITIONS}
+        | {reg.key for reg in SWITCH_DEFINITIONS}
+        | {reg.key for reg in MODEL_SWITCH_DEFINITIONS[MODEL_NEXT3]}
+        | {"battery_power"}
+    )
+    assert expected_keys.issubset(data.keys())
+
+
+async def test_all_register_keys_present_next1(hass):
+    coordinator = StuderNext3Coordinator(hass, "192.168.1.1", 502, 15, model=MODEL_NEXT1)
+
+    async def mock_read(client, reg):
+        return 42.0
+
+    async def mock_read_float32(client, address, slave):
+        return 42.0
+
+    async def mock_read_bool(client, address, slave):
+        return True
+
+    with patch.object(coordinator, "_get_client", return_value=AsyncMock()):
+        with patch.object(coordinator, "_read_register", side_effect=mock_read):
+            with patch.object(coordinator, "_read_float32", side_effect=mock_read_float32):
+                with patch.object(coordinator, "_read_bool", side_effect=mock_read_bool):
+                    data = await coordinator._async_update_data()
+
+    expected_keys = (
+        {reg.key for reg in REGISTER_DEFINITIONS}
+        | {reg.key for reg in MODEL_SWITCH_DEFINITIONS[MODEL_NEXT1]}
+        | {reg.key for reg in NUMBER_DEFINITIONS}
+        | {reg.key for reg in SWITCH_DEFINITIONS}
+        | {"battery_power"}
+    )
     assert expected_keys.issubset(data.keys())
 
 

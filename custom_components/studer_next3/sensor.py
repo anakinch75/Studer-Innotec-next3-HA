@@ -52,6 +52,8 @@ def _group_device_info(entry: ConfigEntry, group: str, model_name: str) -> Devic
 class StuderNext3Sensor(CoordinatorEntity[StuderNext3Coordinator], SensorEntity):
     """A sensor entity backed by a single Modbus register."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: StuderNext3Coordinator,
@@ -62,7 +64,7 @@ class StuderNext3Sensor(CoordinatorEntity[StuderNext3Coordinator], SensorEntity)
         model = entry.data.get(CONF_MODEL, MODEL_NEXT3)
         model_name = "Next3" if model == MODEL_NEXT3 else "Next1"
         self._reg = reg
-        self._attr_unique_id = f"next3_{reg.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{reg.key}"
         self._attr_name = reg.name
         self._attr_entity_registry_enabled_default = reg.key != "battery_power_raw"
         self._attr_native_unit_of_measurement = reg.unit
@@ -81,6 +83,8 @@ class StuderNext3BatteryPowerSensor(
 ):
     """Battery power with sign convention: charging = positive, discharging = negative."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: StuderNext3Coordinator,
@@ -89,7 +93,7 @@ class StuderNext3BatteryPowerSensor(
         super().__init__(coordinator)
         model = entry.data.get(CONF_MODEL, MODEL_NEXT3)
         model_name = "Next3" if model == MODEL_NEXT3 else "Next1"
-        self._attr_unique_id = "next3_battery_power"
+        self._attr_unique_id = f"{entry.entry_id}_battery_power"
         self._attr_name = "Battery Power"
         self._attr_native_unit_of_measurement = UnitOfPower.WATT
         self._attr_device_class = SensorDeviceClass.POWER
