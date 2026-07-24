@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MODEL, DOMAIN, MODEL_NEXT3, MODEL_SWITCH_DEFINITIONS, SWITCH_DEFINITIONS, SwitchRegisterDef
+from .const import CONF_MODEL, DOMAIN, MODEL_DISPLAY_NAMES, MODEL_NEXT3, MODEL_SWITCH_DEFINITIONS, SWITCH_DEFINITIONS, SwitchRegisterDef
 from .coordinator import StuderNext3Coordinator
 from .sensor import _group_device_info
 
@@ -45,7 +45,7 @@ class StuderNext3Switch(CoordinatorEntity[StuderNext3Coordinator], SwitchEntity)
         self._attr_unique_id = f"{entry.entry_id}_{reg.key}"
         self._attr_name = reg.name
         model = entry.data.get(CONF_MODEL, MODEL_NEXT3)
-        model_name = "Next3" if model == MODEL_NEXT3 else "Next1"
+        model_name = MODEL_DISPLAY_NAMES[model]
         self._attr_device_info = _group_device_info(entry, reg.group, model_name)
 
     @property

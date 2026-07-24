@@ -14,6 +14,7 @@ from .const import (
     DOMAIN,
     DataType,
     MODEL_DEVICE_DEFINITIONS,
+    MODEL_DISPLAY_NAMES,
     MODEL_NEXT3,
     MODEL_SWITCH_DEFINITIONS,
     NUMBER_DEFINITIONS,
@@ -78,7 +79,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._client = ModbusTcpClient(self._host, self._port, timeout=_CONNECT_TIMEOUT)
             if not await self._client.connect():
                 self._client = None
-                model_label = "Next3" if self._model == MODEL_NEXT3 else "Next1"
+                model_label = MODEL_DISPLAY_NAMES[self._model]
                 raise UpdateFailed(
                     f"Cannot connect to Studer {model_label} at {self._host}:{self._port}"
                 )

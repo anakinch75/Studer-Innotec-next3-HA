@@ -17,6 +17,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MODEL_DISPLAY_NAMES,
     MODEL_NEXT1,
     MODEL_NEXT3,
 )
@@ -49,7 +50,7 @@ async def _test_connection(host: str, port: int) -> str | None:
     """Try to connect to the device. Return an error key or None if OK."""
     client = ModbusTcpClient(host, port, timeout=_CONNECT_TIMEOUT)
     try:
-        ok = await asyncio.wait_for(client.connect(), timeout=_CONNECT_TIMEOUT)
+        ok = await client.connect()
         if not ok:
             return "cannot_connect"
         # Sanity read: battery SOC register on slave 1
@@ -94,7 +95,7 @@ class StuderNext3ConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = error
                 else:
                     model = user_input[CONF_MODEL]
-                    model_label = "Next3" if model == MODEL_NEXT3 else "Next1"
+                    model_label = MODEL_DISPLAY_NAMES[model]
                     return self.async_create_entry(
                         title=f"Studer {model_label} ({host})",
                         data=user_input,

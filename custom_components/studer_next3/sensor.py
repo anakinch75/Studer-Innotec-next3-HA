@@ -15,6 +15,7 @@ from .const import (
     GROUP_BATTERY,
     GROUP_NAMES,
     MODEL_DEVICE_DEFINITIONS,
+    MODEL_DISPLAY_NAMES,
     MODEL_NEXT3,
     REGISTER_DEFINITIONS,
     ModbusRegisterDef,
@@ -62,7 +63,7 @@ class StuderNext3Sensor(CoordinatorEntity[StuderNext3Coordinator], SensorEntity)
     ) -> None:
         super().__init__(coordinator)
         model = entry.data.get(CONF_MODEL, MODEL_NEXT3)
-        model_name = "Next3" if model == MODEL_NEXT3 else "Next1"
+        model_name = MODEL_DISPLAY_NAMES[model]
         self._reg = reg
         self._attr_unique_id = f"{entry.entry_id}_{reg.key}"
         self._attr_name = reg.name
@@ -92,7 +93,7 @@ class StuderNext3BatteryPowerSensor(
     ) -> None:
         super().__init__(coordinator)
         model = entry.data.get(CONF_MODEL, MODEL_NEXT3)
-        model_name = "Next3" if model == MODEL_NEXT3 else "Next1"
+        model_name = MODEL_DISPLAY_NAMES[model]
         self._attr_unique_id = f"{entry.entry_id}_battery_power"
         self._attr_name = "Battery Power"
         self._attr_native_unit_of_measurement = UnitOfPower.WATT

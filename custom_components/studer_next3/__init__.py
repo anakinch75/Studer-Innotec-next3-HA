@@ -6,7 +6,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platfo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_MODEL, DEFAULT_SCAN_INTERVAL, DOMAIN, MODEL_NEXT3
+from .const import CONF_MODEL, DEFAULT_SCAN_INTERVAL, DOMAIN, MODEL_DISPLAY_NAMES, MODEL_NEXT3
 from .coordinator import StuderNext3Coordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register hub device before platforms so via_device references resolve correctly
     model_key = entry.data.get(CONF_MODEL, MODEL_NEXT3)
-    model_name = "Next3" if model_key == MODEL_NEXT3 else "Next1"
+    model_name = MODEL_DISPLAY_NAMES[model_key]
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

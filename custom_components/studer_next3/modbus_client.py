@@ -92,7 +92,11 @@ class ModbusTcpClient:
             resp_mbap = await asyncio.wait_for(
                 self._reader.readexactly(6), timeout=self._timeout
             )
-            _, _, resp_length = struct.unpack(">HHH", resp_mbap)
+            resp_tid, _, resp_length = struct.unpack(">HHH", resp_mbap)
+            if resp_tid != self._transaction_id:
+                raise ModbusTcpError(
+                    f"Transaction ID mismatch: sent {self._transaction_id}, got {resp_tid}"
+                )
 
             # Response body: unit_id (1) + func_code (1) + payload
             resp_body = await asyncio.wait_for(
@@ -160,7 +164,11 @@ class ModbusTcpClient:
             resp_mbap = await asyncio.wait_for(
                 self._reader.readexactly(6), timeout=self._timeout
             )
-            _, _, resp_length = struct.unpack(">HHH", resp_mbap)
+            resp_tid, _, resp_length = struct.unpack(">HHH", resp_mbap)
+            if resp_tid != self._transaction_id:
+                raise ModbusTcpError(
+                    f"Transaction ID mismatch: sent {self._transaction_id}, got {resp_tid}"
+                )
 
             resp_body = await asyncio.wait_for(
                 self._reader.readexactly(resp_length), timeout=self._timeout

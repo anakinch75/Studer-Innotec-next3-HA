@@ -20,6 +20,7 @@ DEFAULT_SCAN_INTERVAL = 15
 CONF_MODEL = "model"
 MODEL_NEXT3 = "next3"
 MODEL_NEXT1 = "next1"
+MODEL_DISPLAY_NAMES: dict[str, str] = {MODEL_NEXT3: "Next3", MODEL_NEXT1: "Next1"}
 
 # Device groups — each becomes a sub-device under the main "Studer Next1/Next3" hub
 GROUP_GRID = "grid"
