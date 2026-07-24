@@ -86,10 +86,12 @@ Sensors are organised into **4 sub-devices** under the main hub device, visible 
 
 ### ⚡ Inverter
 
-| Sensor | Unit | Description |
-|---|---|---|
-| Inverter Status | — | Operating mode (integer code, see note below) |
-| Inverter Errors | — | Active error flags (integer bitfield) |
+| Sensor | Unit | Description | Model |
+|---|---|---|---|
+| Inverter Status | - | Operating mode (integer code) | Both |
+| Inverter Errors | - | Active error flags (integer bitfield) | Both |
+| AUX1 Relay Position | - | Current position of AUX relay 1 (integer code) | Both |
+| AUX2 Relay Position | - | Current position of AUX relay 2 (integer code) | Both |
 
 > **Inverter Status codes** are raw integers from the Studer register map. Refer to the [official Studer Modbus documentation](https://technext3.studer-innotec.com/modbus-next) for the meaning of each value. For the Next3 these come from slave 14 (addresses 5100/5102); for the Next1 from slave 29 (addresses 2700/2702).
 
@@ -101,7 +103,7 @@ Sensors are organised into **4 sub-devices** under the main hub device, visible 
 
 ## Writable settings _(v0.6.0+)_
 
-In addition to sensors, the integration exposes writable entities that let you change Next3 parameters directly from Home Assistant.
+In addition to sensors, the integration exposes writable entities that let you change inverter parameters directly from Home Assistant.
 
 > **Note:** writes go to **RAM only** (volatile). Values reset to the inverter's saved configuration on power cycle. For persistent changes, use Studer's own configuration portal.
 
@@ -119,7 +121,14 @@ In addition to sensors, the integration exposes writable entities that let you c
 |---|---|---|---|
 | Grid-Feeding Allowed | 1815 | 7 | Enable/disable injection of surplus PV power to the grid |
 
-When **Grid-Feeding Allowed** is OFF and batteries are full, the Next3 will throttle PV production to match local consumption — surplus is curtailed rather than exported.
+When **Grid-Feeding Allowed** is OFF and batteries are full, the inverter will throttle PV production to match local consumption, surplus is curtailed rather than exported.
+
+### ⚡ Inverter — Switch entities _(v0.8.0+)_
+
+| Entity | Register (Next3 slave 14) | Register (Next1 slave 29) | Description |
+|---|---|---|---|
+| AUX1 Relay | 8100 | 3000 | Control AUX relay 1 |
+| AUX2 Relay | 8400 | 3300 | Control AUX relay 2 |
 
 ### Automation example — disable grid feeding at night
 
@@ -235,8 +244,10 @@ Addresses from the official [Studer next-modbus register map v10.154](https://gi
 
 | Sensor | Slave | Address | Type |
 |---|---|---|---|
-| Inverter Status | 14 | 5100 | uint16 |
-| Inverter Errors | 14 | 5102 | uint16 |
+| Inverter Status | 14 | 5100 | uint32 |
+| Inverter Errors | 14 | 5102 | uint32 |
+| AUX1 Relay Position | 14 | 8101 | uint32 |
+| AUX2 Relay Position | 14 | 8401 | uint32 |
 | PV1 Voltage | 14 | 6900 | float32 |
 | PV1 Current | 14 | 6902 | float32 |
 
@@ -244,8 +255,10 @@ Addresses from the official [Studer next-modbus register map v10.154](https://gi
 
 | Sensor | Slave | Address | Type |
 |---|---|---|---|
-| Inverter Status | 29 | 2700 | uint16 |
-| Inverter Errors | 29 | 2702 | uint16 |
+| Inverter Status | 29 | 2700 | uint32 |
+| Inverter Errors | 29 | 2702 | uint32 |
+| AUX1 Relay Position | 29 | 3001 | uint32 |
+| AUX2 Relay Position | 29 | 3301 | uint32 |
 
 ### Read/Write (writable settings)
 
@@ -257,17 +270,21 @@ Uses FC16 (Write Multiple Registers). Writes are volatile (RAM only).
 | SOC for Grid Feeding | 2 | 344 | float32 |
 | SOC for Backup | 2 | 346 | float32 |
 | Grid-Feeding Allowed | 7 | 1815 | bool |
+| AUX1 Relay (Next3) | 14 | 8100 | bool |
+| AUX2 Relay (Next3) | 14 | 8400 | bool |
+| AUX1 Relay (Next1) | 29 | 3000 | bool |
+| AUX2 Relay (Next1) | 29 | 3300 | bool |
 
 ---
 
 ## Troubleshooting
 
 **Cannot connect to device**
-- Confirm the Next3 IP is reachable (`ping <ip>` from the HA host).
-- Confirm Modbus TCP is enabled on the Next3 and port 502 is not blocked.
+- Confirm the inverter IP is reachable (`ping <ip>` from the HA host).
+- Confirm Modbus TCP is enabled on the device and port 502 is not blocked.
 
 **Sensors show `unavailable`**
-- The Next3 may have closed the TCP connection. The integration reconnects automatically.
+- The device may have closed the TCP connection. The integration reconnects automatically.
 - Check **Settings → System → Logs** and filter by `studer_next3`.
 
 **Sensors on slave 2, 14 (Next3) or 29 (Next1) show `unavailable`**
