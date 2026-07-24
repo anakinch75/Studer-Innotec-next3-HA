@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_MODEL, DEFAULT_SCAN_INTERVAL, DOMAIN, MODEL_DISPLAY_NAMES, MODEL_NEXT3
 from .coordinator import StuderNext3Coordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH, Platform.SELECT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

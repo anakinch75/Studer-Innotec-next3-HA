@@ -43,6 +43,22 @@ class DataType(str, Enum):
     UINT32 = "uint32"
 
 
+AUX_RELAY_POSITION_LABELS: dict[int, str] = {
+    0: "Safe state opened",
+    1: "Safe state closed",
+    2: "Manually opened",
+    3: "Manually closed",
+    4: "Automatically opened",
+    5: "Automatically closed",
+}
+
+AUX_RELAY_OPERATING_MODES: dict[int, str] = {
+    0: "Manual Off",
+    1: "Manual On",
+    2: "Auto",
+}
+
+
 @dataclass
 class ModbusRegisterDef:
     key: str
@@ -56,6 +72,7 @@ class ModbusRegisterDef:
     state_class: str | None = None
     scale: float = 1.0
     suggested_display_precision: int | None = None
+    enum_map: dict[int, str] | None = None
 
 
 @dataclass
@@ -118,6 +135,16 @@ class SwitchRegisterDef:
     group: str
 
 
+@dataclass
+class SelectRegisterDef:
+    key: str
+    name: str
+    slave: int
+    address: int
+    group: str
+    options: dict[int, str]
+
+
 SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
     SwitchRegisterDef(
         key="grid_feeding_allowed",
@@ -128,19 +155,47 @@ SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
     ),
 ]
 
-NEXT3_SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
-    SwitchRegisterDef(key="aux1_relay", name="AUX1 Relay", slave=14, address=8100, group=GROUP_INVERTER),
-    SwitchRegisterDef(key="aux2_relay", name="AUX2 Relay", slave=14, address=8400, group=GROUP_INVERTER),
+NEXT3_SELECT_DEFINITIONS: list[SelectRegisterDef] = [
+    SelectRegisterDef(
+        key="aux1_operating_mode",
+        name="AUX1 Operating Mode",
+        slave=14,
+        address=8107,
+        group=GROUP_INVERTER,
+        options=AUX_RELAY_OPERATING_MODES,
+    ),
+    SelectRegisterDef(
+        key="aux2_operating_mode",
+        name="AUX2 Operating Mode",
+        slave=14,
+        address=8407,
+        group=GROUP_INVERTER,
+        options=AUX_RELAY_OPERATING_MODES,
+    ),
 ]
 
-NEXT1_SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
-    SwitchRegisterDef(key="aux1_relay", name="AUX1 Relay", slave=29, address=3000, group=GROUP_INVERTER),
-    SwitchRegisterDef(key="aux2_relay", name="AUX2 Relay", slave=29, address=3300, group=GROUP_INVERTER),
+NEXT1_SELECT_DEFINITIONS: list[SelectRegisterDef] = [
+    SelectRegisterDef(
+        key="aux1_operating_mode",
+        name="AUX1 Operating Mode",
+        slave=29,
+        address=3007,
+        group=GROUP_INVERTER,
+        options=AUX_RELAY_OPERATING_MODES,
+    ),
+    SelectRegisterDef(
+        key="aux2_operating_mode",
+        name="AUX2 Operating Mode",
+        slave=29,
+        address=3307,
+        group=GROUP_INVERTER,
+        options=AUX_RELAY_OPERATING_MODES,
+    ),
 ]
 
-MODEL_SWITCH_DEFINITIONS: dict[str, list[SwitchRegisterDef]] = {
-    MODEL_NEXT3: NEXT3_SWITCH_DEFINITIONS,
-    MODEL_NEXT1: NEXT1_SWITCH_DEFINITIONS,
+MODEL_SELECT_DEFINITIONS: dict[str, list[SelectRegisterDef]] = {
+    MODEL_NEXT3: NEXT3_SELECT_DEFINITIONS,
+    MODEL_NEXT1: NEXT1_SELECT_DEFINITIONS,
 }
 
 
@@ -394,9 +449,7 @@ NEXT3_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         address=8101,
         data_type=DataType.UINT32,
         group=GROUP_INVERTER,
-        unit=None,
-        device_class=None,
-        state_class=None,
+        enum_map=AUX_RELAY_POSITION_LABELS,
     ),
     ModbusRegisterDef(
         key="aux2_relay_position",
@@ -405,9 +458,7 @@ NEXT3_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         address=8401,
         data_type=DataType.UINT32,
         group=GROUP_INVERTER,
-        unit=None,
-        device_class=None,
-        state_class=None,
+        enum_map=AUX_RELAY_POSITION_LABELS,
     ),
     ModbusRegisterDef(
         key="pv1_voltage",
@@ -465,9 +516,7 @@ NEXT1_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         address=3001,
         data_type=DataType.UINT32,
         group=GROUP_INVERTER,
-        unit=None,
-        device_class=None,
-        state_class=None,
+        enum_map=AUX_RELAY_POSITION_LABELS,
     ),
     ModbusRegisterDef(
         key="aux2_relay_position",
@@ -476,9 +525,7 @@ NEXT1_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         address=3301,
         data_type=DataType.UINT32,
         group=GROUP_INVERTER,
-        unit=None,
-        device_class=None,
-        state_class=None,
+        enum_map=AUX_RELAY_POSITION_LABELS,
     ),
 ]
 

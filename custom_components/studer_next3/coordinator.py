@@ -16,7 +16,7 @@ from .const import (
     MODEL_DEVICE_DEFINITIONS,
     MODEL_DISPLAY_NAMES,
     MODEL_NEXT3,
-    MODEL_SWITCH_DEFINITIONS,
+    MODEL_SELECT_DEFINITIONS,
     NUMBER_DEFINITIONS,
     REGISTER_DEFINITIONS,
     ModbusRegisterDef,
@@ -146,6 +146,23 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             return None
         return bool(regs[0])
 
+    async def _read_uint32_val(
+        self, client: ModbusTcpClient, address: int, slave: int
+    ) -> int | None:
+        """Read a UINT32 value (2 registers) and return the combined integer."""
+        try:
+            regs = await client.read_holding_registers(address, 2, slave)
+        except ModbusTcpError as err:
+            _LOGGER.warning("Modbus exception reading uint32 %d (slave %d): %s", address, slave, err)
+            return None
+        except (OSError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Network error reading uint32 %d (slave %d): %s", address, slave, err)
+            self._client = None
+            return None
+        if len(regs) < 2:
+            return None
+        return _decode_uint32(regs)
+
     async def _async_update_data(self) -> dict[str, Any]:
         async with self._lock:
             try:
@@ -166,8 +183,11 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             for num in NUMBER_DEFINITIONS:
                 data[num.key] = await self._read_float32(client, num.address, num.slave)
 
-            for sw in SWITCH_DEFINITIONS + MODEL_SWITCH_DEFINITIONS[self._model]:
+            for sw in SWITCH_DEFINITIONS:
                 data[sw.key] = await self._read_bool(client, sw.address, sw.slave)
+
+            for sel in MODEL_SELECT_DEFINITIONS[self._model]:
+                data[sel.key] = await self._read_uint32_val(client, sel.address, sel.slave)
 
             return data
 
@@ -182,6 +202,12 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         async with self._lock:
             client = await self._get_client()
             await client.write_holding_registers(address, [1 if value else 0], slave)
+
+    async def async_write_uint32(self, address: int, value: int, slave: int) -> None:
+        """Write a UINT32 ENUM value via FC16 (2 registers: high word = 0)."""
+        async with self._lock:
+            client = await self._get_client()
+            await client.write_holding_registers(address, [0, value], slave)
 
     async def async_shutdown(self) -> None:
         if self._client:

@@ -68,15 +68,25 @@ class StuderNext3Sensor(CoordinatorEntity[StuderNext3Coordinator], SensorEntity)
         self._attr_unique_id = f"{entry.entry_id}_{reg.key}"
         self._attr_name = reg.name
         self._attr_entity_registry_enabled_default = reg.key != "battery_power_raw"
-        self._attr_native_unit_of_measurement = reg.unit
-        self._attr_device_class = reg.device_class
-        self._attr_state_class = reg.state_class
-        self._attr_suggested_display_precision = reg.suggested_display_precision
+        if reg.enum_map:
+            # Enum sensor: text state, no unit/device_class/state_class
+            self._attr_native_unit_of_measurement = None
+            self._attr_device_class = None
+            self._attr_state_class = None
+            self._attr_suggested_display_precision = None
+        else:
+            self._attr_native_unit_of_measurement = reg.unit
+            self._attr_device_class = reg.device_class
+            self._attr_state_class = reg.state_class
+            self._attr_suggested_display_precision = reg.suggested_display_precision
         self._attr_device_info = _group_device_info(entry, reg.group, model_name)
 
     @property
-    def native_value(self) -> float | int | None:
-        return self.coordinator.data.get(self._reg.key)
+    def native_value(self) -> float | int | str | None:
+        raw = self.coordinator.data.get(self._reg.key)
+        if self._reg.enum_map is not None and raw is not None:
+            return self._reg.enum_map.get(int(raw), str(raw))
+        return raw
 
 
 class StuderNext3BatteryPowerSensor(

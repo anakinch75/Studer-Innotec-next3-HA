@@ -11,7 +11,7 @@ from custom_components.studer_next3.const import (
     NEXT3_DEVICE_DEFINITIONS,
     NUMBER_DEFINITIONS,
     SWITCH_DEFINITIONS,
-    MODEL_SWITCH_DEFINITIONS,
+    MODEL_SELECT_DEFINITIONS,
     MODEL_NEXT1,
     MODEL_NEXT3,
     DataType,
@@ -115,18 +115,22 @@ async def test_all_register_keys_present(coordinator):
     async def mock_read_bool(client, address, slave):
         return True
 
+    async def mock_read_uint32(client, address, slave):
+        return 1
+
     with patch.object(coordinator, "_get_client", return_value=AsyncMock()):
         with patch.object(coordinator, "_read_register", side_effect=mock_read):
             with patch.object(coordinator, "_read_float32", side_effect=mock_read_float32):
                 with patch.object(coordinator, "_read_bool", side_effect=mock_read_bool):
-                    data = await coordinator._async_update_data()
+                    with patch.object(coordinator, "_read_uint32_val", side_effect=mock_read_uint32):
+                        data = await coordinator._async_update_data()
 
     expected_keys = (
         {reg.key for reg in REGISTER_DEFINITIONS}
         | {reg.key for reg in NEXT3_DEVICE_DEFINITIONS}
         | {reg.key for reg in NUMBER_DEFINITIONS}
         | {reg.key for reg in SWITCH_DEFINITIONS}
-        | {reg.key for reg in MODEL_SWITCH_DEFINITIONS[MODEL_NEXT3]}
+        | {reg.key for reg in MODEL_SELECT_DEFINITIONS[MODEL_NEXT3]}
         | {"battery_power"}
     )
     assert expected_keys.issubset(data.keys())
@@ -144,15 +148,19 @@ async def test_all_register_keys_present_next1(hass):
     async def mock_read_bool(client, address, slave):
         return True
 
+    async def mock_read_uint32(client, address, slave):
+        return 1
+
     with patch.object(coordinator, "_get_client", return_value=AsyncMock()):
         with patch.object(coordinator, "_read_register", side_effect=mock_read):
             with patch.object(coordinator, "_read_float32", side_effect=mock_read_float32):
                 with patch.object(coordinator, "_read_bool", side_effect=mock_read_bool):
-                    data = await coordinator._async_update_data()
+                    with patch.object(coordinator, "_read_uint32_val", side_effect=mock_read_uint32):
+                        data = await coordinator._async_update_data()
 
     expected_keys = (
         {reg.key for reg in REGISTER_DEFINITIONS}
-        | {reg.key for reg in MODEL_SWITCH_DEFINITIONS[MODEL_NEXT1]}
+        | {reg.key for reg in MODEL_SELECT_DEFINITIONS[MODEL_NEXT1]}
         | {reg.key for reg in NUMBER_DEFINITIONS}
         | {reg.key for reg in SWITCH_DEFINITIONS}
         | {"battery_power"}
