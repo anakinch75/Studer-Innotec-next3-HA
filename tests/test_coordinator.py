@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.studer_next3.coordinator import StuderNext3Coordinator
-from custom_components.studer_next3.const import REGISTER_DEFINITIONS, NEXT3_DEVICE_DEFINITIONS
+from custom_components.studer_next3.const import REGISTER_DEFINITIONS, NEXT3_DEVICE_DEFINITIONS, DataType
 
 
 @pytest.fixture
@@ -58,21 +58,42 @@ async def test_energy_scale_applied(coordinator):
     assert result == pytest.approx(raw_wh * 0.001, rel=1e-6)
 
 
-async def test_uint16_read_single_register(coordinator):
-    """UINT16 registers must read exactly 1 register and return the raw value."""
+async def test_uint32_reads_two_registers_and_combines(coordinator):
+    """UINT32 (Studer ENUM) reads 2 registers and combines them as a 32-bit value."""
     from custom_components.studer_next3.modbus_client import ModbusTcpClient
     from unittest.mock import AsyncMock as _AM
-    uint16_reg = next(r for r in NEXT3_DEVICE_DEFINITIONS if r.key == "inverter_status")
+    uint32_reg = next(r for r in NEXT3_DEVICE_DEFINITIONS if r.key == "inverter_status")
+    assert uint32_reg.data_type is DataType.UINT32
 
     mock_client = _AM(spec=ModbusTcpClient)
     mock_client.connected = True
-    mock_client.read_holding_registers.return_value = [3, 0]  # two registers, only first used
+    mock_client.read_holding_registers.return_value = [0, 3]  # high=0, low=3 → value=3
 
-    result = await coordinator._read_register(mock_client, uint16_reg)
+    result = await coordinator._read_register(mock_client, uint32_reg)
 
     mock_client.read_holding_registers.assert_called_once_with(5100, 2, 14)
     assert result == 3
     assert isinstance(result, int)
+
+
+async def test_uint16_reads_single_register(coordinator):
+    """UINT16 reads exactly 1 register."""
+    from custom_components.studer_next3.modbus_client import ModbusTcpClient
+    from unittest.mock import AsyncMock as _AM
+    from custom_components.studer_next3.const import ModbusRegisterDef, GROUP_INVERTER
+    uint16_reg = ModbusRegisterDef(
+        key="test_uint16", name="Test", slave=1, address=100,
+        data_type=DataType.UINT16, group=GROUP_INVERTER,
+    )
+
+    mock_client = _AM(spec=ModbusTcpClient)
+    mock_client.connected = True
+    mock_client.read_holding_registers.return_value = [42]
+
+    result = await coordinator._read_register(mock_client, uint16_reg)
+
+    mock_client.read_holding_registers.assert_called_once_with(100, 1, 1)
+    assert result == 42
 
 
 async def test_all_register_keys_present(coordinator):

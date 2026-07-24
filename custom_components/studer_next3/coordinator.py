@@ -15,6 +15,7 @@ from .const import (
     DataType,
     MODEL_DEVICE_DEFINITIONS,
     MODEL_NEXT3,
+    MODEL_SWITCH_DEFINITIONS,
     NUMBER_DEFINITIONS,
     REGISTER_DEFINITIONS,
     ModbusRegisterDef,
@@ -22,7 +23,7 @@ from .const import (
 )
 from .modbus_client import ModbusTcpClient, ModbusTcpError
 
-_REGISTER_COUNTS = {DataType.FLOAT32: 2, DataType.FLOAT64: 4, DataType.UINT16: 2}
+_REGISTER_COUNTS = {DataType.FLOAT32: 2, DataType.FLOAT64: 4, DataType.UINT16: 1, DataType.UINT32: 2}
 
 _LOGGER = logging.getLogger(__name__)
 _CONNECT_TIMEOUT = 10
@@ -36,6 +37,10 @@ def _decode_float32(registers: list[int]) -> float:
 def _decode_float64(registers: list[int]) -> float:
     raw = struct.pack(">HHHH", registers[0], registers[1], registers[2], registers[3])
     return struct.unpack(">d", raw)[0]
+
+
+def _decode_uint32(registers: list[int]) -> int:
+    return (registers[0] << 16) | registers[1]
 
 
 def _encode_float32(value: float) -> list[int]:
@@ -100,6 +105,8 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             value = _decode_float32(regs)
         elif reg.data_type is DataType.FLOAT64:
             value = _decode_float64(regs)
+        elif reg.data_type is DataType.UINT32:
+            return _decode_uint32(regs)
         else:
             return int(regs[0])
         return value * reg.scale
@@ -158,7 +165,7 @@ class StuderNext3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             for num in NUMBER_DEFINITIONS:
                 data[num.key] = await self._read_float32(client, num.address, num.slave)
 
-            for sw in SWITCH_DEFINITIONS:
+            for sw in SWITCH_DEFINITIONS + MODEL_SWITCH_DEFINITIONS[self._model]:
                 data[sw.key] = await self._read_bool(client, sw.address, sw.slave)
 
             return data

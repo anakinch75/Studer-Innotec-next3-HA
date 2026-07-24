@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MODEL, DOMAIN, MODEL_NEXT3, SWITCH_DEFINITIONS, SwitchRegisterDef
+from .const import CONF_MODEL, DOMAIN, MODEL_NEXT3, MODEL_SWITCH_DEFINITIONS, SWITCH_DEFINITIONS, SwitchRegisterDef
 from .coordinator import StuderNext3Coordinator
 from .sensor import _group_device_info
 
@@ -22,8 +22,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: StuderNext3Coordinator = hass.data[DOMAIN][entry.entry_id]
+    model = entry.data.get(CONF_MODEL, MODEL_NEXT3)
+    all_switches = SWITCH_DEFINITIONS + MODEL_SWITCH_DEFINITIONS[model]
     async_add_entities(
-        StuderNext3Switch(coordinator, entry, reg) for reg in SWITCH_DEFINITIONS
+        StuderNext3Switch(coordinator, entry, reg) for reg in all_switches
     )
 
 

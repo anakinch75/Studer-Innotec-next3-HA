@@ -39,6 +39,7 @@ class DataType(str, Enum):
     FLOAT32 = "float32"
     FLOAT64 = "float64"
     UINT16 = "uint16"
+    UINT32 = "uint32"
 
 
 @dataclass
@@ -125,6 +126,21 @@ SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
         group=GROUP_GRID,
     ),
 ]
+
+NEXT3_SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
+    SwitchRegisterDef(key="aux1_relay", name="AUX1 Relay", slave=14, address=8100, group=GROUP_INVERTER),
+    SwitchRegisterDef(key="aux2_relay", name="AUX2 Relay", slave=14, address=8400, group=GROUP_INVERTER),
+]
+
+NEXT1_SWITCH_DEFINITIONS: list[SwitchRegisterDef] = [
+    SwitchRegisterDef(key="aux1_relay", name="AUX1 Relay", slave=29, address=3000, group=GROUP_INVERTER),
+    SwitchRegisterDef(key="aux2_relay", name="AUX2 Relay", slave=29, address=3300, group=GROUP_INVERTER),
+]
+
+MODEL_SWITCH_DEFINITIONS: dict[str, list[SwitchRegisterDef]] = {
+    MODEL_NEXT3: NEXT3_SWITCH_DEFINITIONS,
+    MODEL_NEXT1: NEXT1_SWITCH_DEFINITIONS,
+}
 
 
 REGISTER_DEFINITIONS: list[ModbusRegisterDef] = [
@@ -353,7 +369,7 @@ NEXT3_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Inverter Status",
         slave=14,
         address=5100,
-        data_type=DataType.UINT16,
+        data_type=DataType.UINT32,
         group=GROUP_INVERTER,
         unit=None,
         device_class=None,
@@ -364,7 +380,29 @@ NEXT3_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Inverter Errors",
         slave=14,
         address=5102,
-        data_type=DataType.UINT16,
+        data_type=DataType.UINT32,
+        group=GROUP_INVERTER,
+        unit=None,
+        device_class=None,
+        state_class=None,
+    ),
+    ModbusRegisterDef(
+        key="aux1_relay_position",
+        name="AUX1 Relay Position",
+        slave=14,
+        address=8101,
+        data_type=DataType.UINT32,
+        group=GROUP_INVERTER,
+        unit=None,
+        device_class=None,
+        state_class=None,
+    ),
+    ModbusRegisterDef(
+        key="aux2_relay_position",
+        name="AUX2 Relay Position",
+        slave=14,
+        address=8401,
+        data_type=DataType.UINT32,
         group=GROUP_INVERTER,
         unit=None,
         device_class=None,
@@ -402,7 +440,7 @@ NEXT1_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Inverter Status",
         slave=29,
         address=2700,
-        data_type=DataType.UINT16,
+        data_type=DataType.UINT32,
         group=GROUP_INVERTER,
         unit=None,
         device_class=None,
@@ -413,7 +451,29 @@ NEXT1_DEVICE_DEFINITIONS: list[ModbusRegisterDef] = [
         name="Inverter Errors",
         slave=29,
         address=2702,
-        data_type=DataType.UINT16,
+        data_type=DataType.UINT32,
+        group=GROUP_INVERTER,
+        unit=None,
+        device_class=None,
+        state_class=None,
+    ),
+    ModbusRegisterDef(
+        key="aux1_relay_position",
+        name="AUX1 Relay Position",
+        slave=29,
+        address=3001,
+        data_type=DataType.UINT32,
+        group=GROUP_INVERTER,
+        unit=None,
+        device_class=None,
+        state_class=None,
+    ),
+    ModbusRegisterDef(
+        key="aux2_relay_position",
+        name="AUX2 Relay Position",
+        slave=29,
+        address=3301,
+        data_type=DataType.UINT32,
         group=GROUP_INVERTER,
         unit=None,
         device_class=None,
