@@ -90,8 +90,8 @@ Sensors are organised into **4 sub-devices** under the main hub device, visible 
 |---|---|---|---|
 | Inverter Status | - | Operating mode (integer code) | Both |
 | Inverter Errors | - | Active error flags (integer bitfield) | Both |
-| AUX1 Relay Position | - | Current position of AUX relay 1 (integer code) | Both |
-| AUX2 Relay Position | - | Current position of AUX relay 2 (integer code) | Both |
+| AUX1 Relay Position | - | Current position of AUX relay 1 (Safe state opened / Manually closed / ...) | Both |
+| AUX2 Relay Position | - | Current position of AUX relay 2 (Safe state opened / Manually closed / ...) | Both |
 
 > **Inverter Status codes** are raw integers from the Studer register map. Refer to the [official Studer Modbus documentation](https://technext3.studer-innotec.com/modbus-next) for the meaning of each value. For the Next3 these come from slave 14 (addresses 5100/5102); for the Next1 from slave 29 (addresses 2700/2702).
 
@@ -123,12 +123,22 @@ In addition to sensors, the integration exposes writable entities that let you c
 
 When **Grid-Feeding Allowed** is OFF and batteries are full, the inverter will throttle PV production to match local consumption, surplus is curtailed rather than exported.
 
-### ⚡ Inverter — Switch entities _(v0.8.0+)_
+### ⚡ Inverter — Select entities _(v0.9.0+)_
 
 | Entity | Register (Next3 slave 14) | Register (Next1 slave 29) | Description |
 |---|---|---|---|
-| AUX1 Relay | 8100 | 3000 | Control AUX relay 1 |
-| AUX2 Relay | 8400 | 3300 | Control AUX relay 2 |
+| AUX1 Operating Mode | 8107 | 3007 | Control AUX relay 1 operating mode |
+| AUX2 Operating Mode | 8407 | 3307 | Control AUX relay 2 operating mode |
+
+Each entity offers 3 options:
+
+| Option | Description |
+|---|---|
+| Manual Off | Relay forced open |
+| Manual On | Relay forced closed |
+| Auto | Relay follows automatic rules (SOC, voltage, schedule, etc.) |
+
+The read-only **AUX1/AUX2 Relay Position** sensors show the actual relay state: `Safe state opened`, `Safe state closed`, `Manually opened`, `Manually closed`, `Automatically opened`, or `Automatically closed`.
 
 ### Automation example — disable grid feeding at night
 
@@ -270,10 +280,10 @@ Uses FC16 (Write Multiple Registers). Writes are volatile (RAM only).
 | SOC for Grid Feeding | 2 | 344 | float32 |
 | SOC for Backup | 2 | 346 | float32 |
 | Grid-Feeding Allowed | 7 | 1815 | bool |
-| AUX1 Relay (Next3) | 14 | 8100 | bool |
-| AUX2 Relay (Next3) | 14 | 8400 | bool |
-| AUX1 Relay (Next1) | 29 | 3000 | bool |
-| AUX2 Relay (Next1) | 29 | 3300 | bool |
+| AUX1 Operating Mode (Next3) | 14 | 8107 | uint32 enum (0=Manual Off, 1=Manual On, 2=Auto) |
+| AUX2 Operating Mode (Next3) | 14 | 8407 | uint32 enum (0=Manual Off, 1=Manual On, 2=Auto) |
+| AUX1 Operating Mode (Next1) | 29 | 3007 | uint32 enum (0=Manual Off, 1=Manual On, 2=Auto) |
+| AUX2 Operating Mode (Next1) | 29 | 3307 | uint32 enum (0=Manual Off, 1=Manual On, 2=Auto) |
 
 ---
 
@@ -293,6 +303,24 @@ Uses FC16 (Write Multiple Registers). Writes are volatile (RAM only).
 
 **Energy values reset unexpectedly**
 - Energy sensors are `total_increasing`. If the Next3 resets its counters (firmware update, power cycle), HA may show a spike. Use the HA **Statistics** editor to correct long-term stats.
+
+---
+
+## Upgrade notes
+
+### v0.9.0 — AUX relay entities changed from Switch to Select
+
+The AUX1/AUX2 relay entities changed from **Switch** to **Select**. After updating, the old switch entities will show as **unavailable** in Home Assistant. Remove them manually:
+
+1. Go to **Settings > Devices & Services > Studer Next1 & Next3**
+2. Click on your inverter device (e.g. "Studer Next3")
+3. Scroll to the **Inverter** sub-device
+4. Find **AUX1 Relay** and **AUX2 Relay** (shown as unavailable)
+5. Click the entity, then the gear icon, then **Delete**
+6. Repeat for AUX2
+7. Reload the integration (or restart Home Assistant)
+
+The new **AUX1 Operating Mode** and **AUX2 Operating Mode** select entities will appear automatically with the options Manual Off / Manual On / Auto.
 
 ---
 
