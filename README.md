@@ -123,22 +123,50 @@ In addition to sensors, the integration exposes writable entities that let you c
 
 When **Grid-Feeding Allowed** is OFF and batteries are full, the inverter will throttle PV production to match local consumption, surplus is curtailed rather than exported.
 
-### ⚡ Inverter — Select entities _(v0.9.0+)_
+### ⚡ Inverter — AUX relay control _(v0.9.0+)_
 
-| Entity | Register (Next3 slave 14) | Register (Next1 slave 29) | Description |
-|---|---|---|---|
-| AUX1 Operating Mode | 8107 | 3007 | Control AUX relay 1 operating mode |
-| AUX2 Operating Mode | 8407 | 3307 | Control AUX relay 2 operating mode |
+Each AUX output exposes two entities:
 
-Each entity offers 3 options:
+| Entity | Type | Description |
+|---|---|---|
+| AUX1 Operating Mode | Select (writable) | Choose how the relay is controlled |
+| AUX1 Relay Position | Sensor (read-only) | Actual current state of the relay |
+| AUX2 Operating Mode | Select (writable) | Choose how the relay is controlled |
+| AUX2 Relay Position | Sensor (read-only) | Actual current state of the relay |
 
-| Option | Description |
+**Operating Mode** — what you set to control the relay:
+
+| Option | What happens |
 |---|---|
-| Manual Off | Relay forced open |
-| Manual On | Relay forced closed |
-| Auto | Relay follows automatic rules (SOC, voltage, schedule, etc.) |
+| Manual Off | Relay forced open regardless of conditions |
+| Manual On | Relay forced closed regardless of conditions |
+| Auto | Relay follows the automatic rules configured in the Studer portal (SOC threshold, voltage, schedule, etc.) |
 
-The read-only **AUX1/AUX2 Relay Position** sensors show the actual relay state: `Safe state opened`, `Safe state closed`, `Manually opened`, `Manually closed`, `Automatically opened`, or `Automatically closed`.
+**Relay Position** — what the inverter reports as the actual state:
+
+| Value | Meaning |
+|---|---|
+| Safe state opened / closed | Relay is in its safe/default state (after boot or fault) |
+| Manually opened / closed | Result of Manual Off / Manual On |
+| Automatically opened / closed | Result of Auto mode following its rules |
+
+**Typical usage:**
+
+- To force a load ON (e.g. water heater, pool pump): set Operating Mode to **Manual On**
+- To force a load OFF: set Operating Mode to **Manual Off**
+- To let the Studer inverter manage it automatically based on SOC or schedule: set Operating Mode to **Auto**
+- Check the **Relay Position** sensor to confirm the relay actually changed state
+
+> **Note:** The operating mode and position are two separate concepts. Setting the mode to "Manual On" tells the inverter what to do; the position sensor confirms it has done it. In normal operation both are consistent, but the position may differ briefly during transitions or if the inverter applies its safe state logic.
+
+Registers (UINT32 ENUM, 2 registers):
+
+| Entity | Slave (Next3) | Address (Next3) | Slave (Next1) | Address (Next1) |
+|---|---|---|---|---|
+| AUX1 Operating Mode | 14 | 8107 | 29 | 3007 |
+| AUX2 Operating Mode | 14 | 8407 | 29 | 3307 |
+| AUX1 Relay Position (read-only) | 14 | 8101 | 29 | 3001 |
+| AUX2 Relay Position (read-only) | 14 | 8401 | 29 | 3301 |
 
 ### Automation example — disable grid feeding at night
 
